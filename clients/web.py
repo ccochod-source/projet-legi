@@ -95,6 +95,7 @@ async def _telecharger(
     client: httpx.AsyncClient, url_demandee: str, resoudre: Resolveur
 ) -> dict[str, Any]:
     adresse = valider_url(url_demandee)
+    cookies: set[str] = set()
     for _ in range(MAX_REDIRECTIONS + 1):
         ip = await _ip_verifiee(adresse, resoudre)
         en_tetes = {
@@ -107,6 +108,13 @@ async def _telecharger(
         async with client.stream(
             "GET", _url_vers_ip(adresse, ip), headers=en_tetes, extensions=extensions
         ) as reponse:
+            # Seuls les noms des cookies sont gardés, jamais leurs valeurs,
+            # y compris ceux déposés par une réponse de redirection.
+            cookies.update(
+                valeur.split("=", 1)[0].strip()
+                for valeur in reponse.headers.get_list("Set-Cookie")
+                if "=" in valeur
+            )
             if reponse.is_redirect:
                 cible = reponse.headers.get("Location", "")
                 if not cible:
@@ -132,19 +140,13 @@ async def _telecharger(
                     raise ErreurOutil("Page trop volumineuse pour être analysée.")
                 morceaux.append(morceau)
             contenu = b"".join(morceaux).decode(reponse.encoding or "utf-8", errors="replace")
-            # Seuls les noms des cookies sont gardés, jamais leurs valeurs.
-            cookies = sorted({
-                valeur.split("=", 1)[0].strip()
-                for valeur in reponse.headers.get_list("Set-Cookie")
-                if "=" in valeur
-            })
             return {
                 "url": str(adresse),
                 "url_demandee": url_demandee,
                 "code_http": reponse.status_code,
                 "type_contenu": type_contenu,
                 "contenu": contenu,
-                "cookies_deposes": cookies,
+                "cookies_deposes": sorted(cookies),
                 "date_recuperation": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             }
     raise ErreurOutil("Trop de redirections : page abandonnée.")
