@@ -104,7 +104,7 @@ def analyser_traceurs(html: str, cookies: list[str], signatures: dict[str, Any])
             continue
         contenu = (script.get("src", "") + " " + (script.string or "")).lower()
         type_script = script.get("type", "").lower()
-        bloque = type_script.strip() not in TYPES_SCRIPT_EXECUTES
+        bloque = type_script.split(";")[0].strip() not in TYPES_SCRIPT_EXECUTES
         for nom, motifs in signatures["traceurs"].items():
             if any(motif in contenu for motif in motifs):
                 (bloques if bloque else actifs).add(nom)
