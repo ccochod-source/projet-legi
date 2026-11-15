@@ -1,16 +1,143 @@
 <!doctype html>
 <html lang="fr">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Projet Légi</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Préparez la vérification juridique de votre site ou de votre projet, à partir de sources officielles."
+    />
+    <title>Projet Légi — Vérification juridique</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/app.js" defer></script>
   </head>
   <body>
+    <header class="barre">
+      <a class="marque" href="/"
+        >L<span>é</span>gi<span class="point">.</span></a
+      ><span class="etiquette">OUTIL PÉDAGOGIQUE · LOCAL</span>
+    </header>
     <main>
-      <h1>Projet Légi</h1>
-      <p>Analyse juridique de projets — squelette pédagogique.</p>
-      <p>La discussion Groq et les outils MCP ne sont pas encore implémentés.</p>
-      <p>Cette application ne constitue pas un conseil juridique.</p>
+      <section class="introduction">
+        <p class="surtitre">VOTRE PROJET, À LA LUMIÈRE DU DROIT</p>
+        <h1>Les bons réflexes.<br />Les bonnes <em>références.</em></h1>
+        <p class="accroche">
+          Un site à lancer, un projet à préciser ? Identifiez les points à
+          vérifier et retrouvez les sources qui les éclairent.
+        </p>
+      </section>
+      <div class="espace-travail">
+        <section class="carte saisie" aria-labelledby="titre-demande">
+          <div class="entete-carte">
+            <span class="numero">01</span>
+            <h2 id="titre-demande">Le point de départ</h2>
+          </div>
+          <form id="formulaire">
+            <label for="demande"
+              >L’URL de votre site ou la description de votre projet</label
+            >
+            <textarea
+              id="demande"
+              name="message"
+              rows="7"
+              minlength="3"
+              maxlength="6000"
+              required
+              placeholder="https://mon-site.fr&#10;&#10;ou : Je prépare une boutique en ligne en France. Quelles informations dois-je afficher ?"
+              aria-describedby="aide-demande"
+            ></textarea>
+            <p id="aide-demande" class="aide">
+              Précisez le pays, l’activité et votre question. Utilisez seulement
+              des pages publiques ; évitez les noms, coordonnées privées et
+              identifiants personnels.
+            </p>
+            <button id="analyser" type="submit">
+              Lancer la vérification <span aria-hidden="true">↗</span>
+            </button>
+          </form>
+          <p id="configuration" class="configuration" role="status">
+            Vérification de la configuration…
+          </p>
+          <div class="note">
+            <strong>Un appui, pas une certification.</strong>
+            <p>
+              Chaque constat reste limité aux éléments consultés. Ce rapport
+              préparatoire ne remplace pas un avis juridique.
+            </p>
+          </div>
+        </section>
+        <section
+          class="carte resultat"
+          aria-labelledby="titre-resultat"
+          aria-busy="false"
+          id="zone-resultat"
+        >
+          <div class="entete-carte">
+            <span class="numero">02</span>
+            <h2 id="titre-resultat">Votre rapport</h2>
+            <button id="telecharger" class="secondaire" type="button" hidden>
+              Exporter .md
+            </button>
+          </div>
+          <p id="progression" role="status" aria-live="polite" hidden></p>
+          <p id="erreur" class="erreur" role="alert" hidden></p>
+          <div id="attente" class="attente">
+            <div class="symbole" aria-hidden="true">§</div>
+            <h3>La clarté commence par des faits.</h3>
+            <p>
+              Votre rapport présentera, point par point, les preuves disponibles
+              et les références légales.
+            </p>
+            <div class="legende">
+              <span>conforme</span><span>manquant</span><span>a_verifier</span>
+            </div>
+          </div>
+          <div id="rapport" hidden>
+            <p class="aide">
+              Constats préparatoires sur les seuls éléments consultés.
+            </p>
+            <div class="tableau">
+              <table>
+                <caption class="sr-only">
+                  Points de vérification et leurs sources
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Point</th>
+                    <th scope="col">Statut</th>
+                    <th scope="col">Preuve</th>
+                    <th scope="col">Référence légale</th>
+                  </tr>
+                </thead>
+                <tbody id="points"></tbody>
+              </table>
+            </div>
+            <h3>Informations manquantes et limites</h3>
+            <ul id="manquantes"></ul>
+          </div>
+          <details id="journal" hidden open>
+            <summary>Outils appelés pendant cette analyse</summary>
+            <ol id="outils"></ol>
+          </details>
+        </section>
+      </div>
+      <section class="methode" aria-label="Méthode">
+        <p>
+          <strong>01 / Observer</strong>Des pages publiques et des faits précis.
+        </p>
+        <p>
+          <strong>02 / Vérifier</strong>Des outils dédiés et des sources
+          officielles.
+        </p>
+        <p>
+          <strong>03 / Documenter</strong>Des preuves, des références et des
+          limites.
+        </p>
+      </section>
     </main>
+    <footer>
+      <span>Projet Légi · Projet de cours</span
+      ><span>Interface locale · Analyse via Groq et outils MCP</span>
+    </footer>
   </body>
 </html>
