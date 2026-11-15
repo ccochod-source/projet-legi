@@ -25,7 +25,9 @@ TYPES_PAGES_LEGALES = ("mentions_legales", "confidentialite", "cookies", "cgv", 
 MAX_PAGES = 6  # page d'accueil + 5 pages légales au maximum
 MAX_SIREN_VERIFIES = 2
 LONGUEUR_TEXTE_LISIBLE = 300
-PREFIXES_BLOCAGE = ("data-cookie", "data-consent", "data-category", "data-usercentrics", "data-cmp", "data-tarteaucitron")
+# Types de <script> exécutés par le navigateur ; tout autre type (ex. text/plain
+# utilisé par les CMP) bloque le script jusqu'au consentement.
+TYPES_SCRIPT_EXECUTES = ("", "text/javascript", "application/javascript", "module", "text/ecmascript", "application/ecmascript")
 AVERTISSEMENT = (
     "Analyse automatique d'indices publics : ce n'est ni un avis juridique ni "
     "une certification. « conforme » signifie seulement que l'élément a été "
@@ -99,9 +101,7 @@ def analyser_traceurs(html: str, cookies: list[str], signatures: dict[str, Any])
             continue
         contenu = (script.get("src", "") + " " + (script.string or "")).lower()
         type_script = script.get("type", "").lower()
-        bloque = type_script == "text/plain" or any(
-            attribut.startswith(PREFIXES_BLOCAGE) for attribut in script.attrs
-        )
+        bloque = type_script.strip() not in TYPES_SCRIPT_EXECUTES
         for nom, motifs in signatures["traceurs"].items():
             if any(motif in contenu for motif in motifs):
                 (bloques if bloque else actifs).add(nom)
