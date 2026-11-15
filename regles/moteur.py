@@ -111,8 +111,16 @@ def _applicable(applicabilite: str, contexte: dict[str, Any]) -> bool:
     return True
 
 
-def _absent(obligation: dict[str, Any], contexte: dict[str, Any], explication: str) -> tuple[str, str]:
+def _absent(
+    obligation: dict[str, Any], contexte: dict[str, Any], explication: str, pages: tuple[str, ...] = ()
+) -> tuple[str, str]:
     """Statut quand l'élément n'est pas trouvé : manquant seulement si c'est sûr."""
+    non_lues = [t for t in pages if t in contexte["erreurs_pages"]]
+    if non_lues:
+        return "a_verifier", (
+            f"{explication} Page(s) liée(s) mais non récupérée(s) : "
+            + ", ".join(contexte["erreurs_pages"][t]["url"] for t in non_lues) + "."
+        )
     applicabilite = obligation.get("applicabilite", "toujours")
     if not _applicable(applicabilite, contexte):
         return "a_verifier", f"{explication} {EXPLICATIONS_APPLICABILITE[applicabilite]}"
@@ -147,7 +155,7 @@ def _detecter_mots_cles(obligation, contexte):
             return "conforme", f"« {_extrait(trouve)} » trouvé sur {page['url']}", page["url"]
     lues = [contexte["pages"][t]["url"] for t in detection["pages"] if t in contexte["pages"]]
     explication = "Mention non trouvée dans les pages lues : " + (", ".join(lues) or "aucune") + "."
-    statut, preuve = _absent(obligation, contexte, explication)
+    statut, preuve = _absent(obligation, contexte, explication, tuple(detection["pages"]))
     return statut, preuve, (lues[0] if lues else contexte["url_finale"])
 
 
@@ -162,7 +170,8 @@ def _detecter_siren(obligation, contexte):
     resultat = contexte.get("siren") or {}
     if resultat.get("statut") in STATUTS:
         return resultat["statut"], resultat["preuve"], resultat.get("url_preuve")
-    statut, preuve = _absent(obligation, contexte, "Aucun numéro SIREN, SIRET ou RCS trouvé dans les pages lues.")
+    statut, preuve = _absent(obligation, contexte, "Aucun numéro SIREN, SIRET ou RCS trouvé dans les pages lues.",
+        ("mentions_legales", "cgv", "cgu"))
     return statut, preuve, contexte["url_finale"]
 
 
