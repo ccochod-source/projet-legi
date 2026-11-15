@@ -33,8 +33,9 @@ Le script vérifie Python, crée `.venv`, installe `requirements.txt`, copie
 `.env.example` vers `.env` si nécessaire et demande les clés manquantes.
 **Rien ne s'affiche pendant la saisie d'une clé : c'est normal.** Validez avec
 Entrée. Les clés sont conservées dans `.env` avec des permissions privées.
-Ne partagez jamais ce fichier. Une variable déjà définie dans l'environnement
-du Terminal prend le dessus sur `.env`.
+Ne partagez jamais ce fichier. Une clé valide déjà définie dans l'environnement
+du Terminal prend le dessus sur `.env`. Le lanceur ignore les variables vides
+ou contenant encore une valeur d'exemple, pour que `.env` puisse être utilisé.
 
 Le navigateur s'ouvre sur <http://127.0.0.1:8001>. Gardez le Terminal ouvert.
 Pour arrêter : **Ctrl+C**. Pour relancer un autre jour : même commande,

@@ -37,6 +37,17 @@ if [ ! -f .env ]; then
 fi
 chmod 600 .env
 
+# python-dotenv conserve les variables existantes, même vides : retirons
+# seulement les valeurs absentes ou d'exemple pour laisser .env prendre effet.
+for nom in GROQ_API_KEY LEGIFRANCE_CLIENT_ID LEGIFRANCE_CLIENT_SECRET; do
+  valeur="${!nom-}"
+  valeur="${valeur//[[:space:]]/}"
+  case "$valeur" in
+    ""|votre_cle|votre_identifiant|votre_secret) unset "$nom" ;;
+  esac
+done
+unset valeur nom
+
 .venv/bin/python - <<'PY'
 """Demande les clés manquantes sans les afficher ni les passer en arguments."""
 import getpass

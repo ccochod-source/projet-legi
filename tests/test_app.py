@@ -2,7 +2,9 @@
 
 import copy
 import json
+import os
 import subprocess
+import sys
 from contextlib import asynccontextmanager
 from types import SimpleNamespace
 from zipfile import ZipFile
@@ -332,3 +334,48 @@ def test_lien_non_juridique_ecarte_meme_si_renvoye_par_outil(url):
     assert rapport["points"][0]["statut"] == "a_verifier"
     assert rapport["points"][0]["url"] == ""
     assert rapport["sources"] == []
+
+
+@pytest.mark.parametrize("valeur_exportee", ["", "  ", "votre_cle", " votre_cle ", "valeur-environnement-simulee"])
+def test_lanceur_ignore_environnement_vide_ou_exemple(tmp_path, valeur_exportee):
+    dossier = tmp_path / "projet avec espaces"
+    (dossier / ".venv/bin").mkdir(parents=True)
+    (dossier / "lancer.sh").write_text((application.RACINE / "lancer.sh").read_text())
+    (dossier / ".env").write_text(
+        "GROQ_API_KEY=valeur-fichier-simulee\n"
+        "LEGIFRANCE_CLIENT_ID=valeur-fichier-simulee\n"
+        "LEGIFRANCE_CLIENT_SECRET=valeur-fichier-simulee\n"
+    )
+    # Intercepte uniquement pip et le lancement final ; les étapes Python
+    # de lecture/écriture des clés restent celles du vrai script.
+    python_simule = dossier / ".venv/bin/python"
+    python_simule.write_text(f"#!{sys.executable}\n" + '''
+import os
+import sys
+from dotenv import load_dotenv
+if sys.argv[1:3] == ['-m', 'pip']:
+    sys.exit(0)
+if sys.argv[1:] == ['-m', 'app.main']:
+    load_dotenv('.env')
+    assert os.getenv('GROQ_API_KEY') == os.environ['ATTENDU_GROQ_TEST']
+    assert os.getenv('LEGIFRANCE_CLIENT_ID') == 'valeur-fichier-simulee'
+    assert os.getenv('LEGIFRANCE_CLIENT_SECRET') == 'valeur-fichier-simulee'
+    print('Configuration effective validée')
+else:
+    os.execv(sys.executable, [sys.executable, *sys.argv[1:]])
+''')
+    python_simule.chmod(0o755)
+    outils = dossier / "outils-simules"
+    outils.mkdir()
+    uname = outils / "uname"
+    uname.write_text("#!/bin/sh\nprintf 'Linux\\n'\n")
+    uname.chmod(0o755)
+    attendu = valeur_exportee if valeur_exportee == "valeur-environnement-simulee" else "valeur-fichier-simulee"
+    environnement = {**os.environ, "GROQ_API_KEY": valeur_exportee,
+                     "LEGIFRANCE_CLIENT_ID": "", "LEGIFRANCE_CLIENT_SECRET": "votre_secret",
+                     "ATTENDU_GROQ_TEST": attendu, "PATH": str(outils) + os.pathsep + os.environ["PATH"]}
+    resultat = subprocess.run(["bash", str(dossier / "lancer.sh")], env=environnement,
+                              capture_output=True, text=True, timeout=20)
+    assert resultat.returncode == 0, resultat.stderr
+    assert "Configuration effective validée" in resultat.stdout
+    assert "valeur-fichier-simulee" not in resultat.stdout + resultat.stderr
