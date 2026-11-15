@@ -132,11 +132,12 @@ def _absent(
         )
     applicabilite = obligation.get("applicabilite", "toujours")
     if not _applicable(applicabilite, contexte):
+        contexte["applicable"] = False
         return "a_verifier", f"{explication} {EXPLICATIONS_APPLICABILITE[applicabilite]}"
     if not contexte["contenu_lisible"]:
         return "a_verifier", (
-            f"{explication} La page d'accueil contient très peu de texte "
-            "(site probablement généré en JavaScript) : vérification manuelle nécessaire."
+            f"{explication} La page contient très peu de texte (page minimale ou générée "
+            "en JavaScript) : vérification manuelle nécessaire."
         )
     if pages:
         if pages[0] not in contexte["pages"]:
@@ -256,10 +257,14 @@ def evaluer_obligations(regles: dict[str, Any], contexte: dict[str, Any]) -> lis
     """Applique chaque obligation au contexte du site et renvoie les vérifications."""
     verifications = []
     for obligation in regles["obligations"]:
+        contexte = {**contexte, "applicable": True}
         detecteur = DETECTEURS[obligation["detection"]["type"]]
         statut, preuve, url_preuve = detecteur(obligation, contexte)
         verifications.append({
             "id": obligation["id"],
+            "libelle": obligation.get("libelle", obligation["description"]),
+            "action": obligation.get("action", "Vérifiez ce point dans les pages légales."),
+            "applicable": contexte["applicable"],
             "theme": obligation["theme"],
             "description": obligation["description"],
             "statut": statut,

@@ -316,6 +316,10 @@ def test_site_sans_pages_legales(monkeypatch):
     assert points["mentions_legales_page"]["statut"] == "a_verifier"
     assert points["ecommerce_cgv"]["statut"] == "a_verifier"
     assert points["mentions_siren"]["statut"] == "a_verifier"
+    assert points["mentions_siren"]["applicable"] is False
+    assert points["ecommerce_cgv"]["applicable"] is True
+    assert points["ecommerce_retractation"]["applicable"] is False
+    assert points["hebergeur"]["applicable"] is True
 
 
 def test_site_genere_en_javascript_donne_a_verifier(monkeypatch):
@@ -323,6 +327,7 @@ def test_site_genere_en_javascript_donne_a_verifier(monkeypatch):
     points = par_id(asyncio.run(analyser_site("https://exemple.fr/")))
     assert points["mentions_legales_page"]["statut"] == "a_verifier"
     assert "JavaScript" in points["mentions_legales_page"]["preuve"]
+    assert "La page contient très peu de texte (page minimale ou générée en JavaScript)" in points["hebergeur"]["preuve"]
 
 
 def test_page_legale_en_erreur_signalee(monkeypatch):

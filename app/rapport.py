@@ -10,6 +10,8 @@ from urllib.parse import urlsplit
 from pydantic import BaseModel, Field, ValidationError
 
 from erreurs import ErreurOutil
+from app.tableau_de_bord import construire_tableau_de_bord
+from regles.moteur import charger_regles
 
 
 class PointPropose(BaseModel):
@@ -83,11 +85,14 @@ def rapport_depuis_outils(resultats: list[dict[str, Any]]) -> dict[str, Any] | N
     """
     points = []
     limites = []
+    constats_site = []
+    regles = {o["id"]: o for o in charger_regles()["obligations"]}
     for resultat in resultats:
         if resultat.get("statut") != "ok":
             continue
         analyse = resultat.get("analyse", {})
         for constat in analyse.get("verifications", []):
+            constats_site.append((len(points), constat))
             reference = constat["reference"]
             points.append({
                 "point": constat["id"].replace("_", " "), "statut": constat["statut"],
@@ -115,9 +120,25 @@ def rapport_depuis_outils(resultats: list[dict[str, Any]]) -> dict[str, Any] | N
             limites.append("Articles consultés : extraits, état et applicabilité à vérifier ; aucune conformité n'est déduite de leur lecture.")
     if not points and not limites:
         return None
-    return construire_rapport(json.dumps({
+    rapport = construire_rapport(json.dumps({
         "points": points[:30], "informations_manquantes": [limite for limite in limites if limite][:30],
     }, ensure_ascii=False), resultats)
+    if constats_site:
+        constats = []
+        for index, constat in constats_site:
+            if index >= len(rapport["points"]):
+                continue
+            regle = regles.get(constat["id"], {})
+            constats.append({
+                **rapport["points"][index], "id": constat["id"],
+                "libelle": regle.get("libelle", constat.get("libelle", constat["id"])),
+                "theme": regle.get("theme", constat.get("theme", "Mentions légales")),
+                "gravite": regle.get("gravite", constat.get("gravite", "information")),
+                "applicable": constat.get("applicable", True),
+                "action": regle.get("action", constat.get("action", "Vérifiez ce point manuellement.")),
+            })
+        rapport["tableau_de_bord"] = construire_tableau_de_bord(constats)
+    return rapport
 
 
 def construire_rapport(contenu: str, resultats: list[dict[str, Any]]) -> dict[str, Any]:
