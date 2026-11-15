@@ -1,3 +1,827 @@
 {
-  "obligations": []
+  "version": 1,
+  "verifie_le": "2026-11-15",
+  "note": "Identifiants LEGIARTI relevés le 15/11/2026 sur les fiches service-public.gouv.fr (F37351, F23455, F31228) et sur l'export LEGI de codes.droit.org. Le RGPD n'est pas sur Légifrance : lien EUR-Lex, legifrance_id vide.",
+  "obligations": [
+    {
+      "id": "https",
+      "theme": "Sécurité",
+      "description": "Les échanges avec le site sont chiffrés (HTTPS), mesure de sécurité minimale des données transmises.",
+      "reference_legale": {
+        "texte": "Règlement (UE) 2016/679 du 27 avril 2016 (RGPD)",
+        "article": "32",
+        "legifrance_id": "",
+        "url": "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32016R0679"
+      },
+      "verification": "L'adresse finale de la page d'accueil commence par https://. Ne couvre que le chiffrement du transport, pas l'ensemble de l'article 32.",
+      "gravite": "avertissement",
+      "applicabilite": "toujours",
+      "detection": {
+        "type": "https"
+      }
+    },
+    {
+      "id": "mentions_legales_page",
+      "theme": "Mentions légales",
+      "description": "Une page de mentions légales identifiant l'éditeur et l'hébergeur est accessible.",
+      "reference_legale": {
+        "texte": "Loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN)",
+        "article": "1-1",
+        "legifrance_id": "LEGIARTI000049568614",
+        "url": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000049568614"
+      },
+      "verification": "Un lien « mentions légales » (ou équivalent) est trouvé sur la page d'accueil et la page est récupérée.",
+      "gravite": "critique",
+      "applicabilite": "toujours",
+      "detection": {
+        "type": "page",
+        "page": "mentions_legales"
+      }
+    },
+    {
+      "id": "mentions_editeur",
+      "theme": "Mentions légales",
+      "description": "Identité de l'éditeur : dénomination ou raison sociale (personne morale), ou nom et prénom (personne physique).",
+      "reference_legale": {
+        "texte": "Loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN)",
+        "article": "1-1",
+        "legifrance_id": "LEGIARTI000049568614",
+        "url": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000049568614"
+      },
+      "verification": "Présence d'une mention d'éditeur, de dénomination sociale ou de forme juridique. Un éditeur non professionnel peut ne communiquer son identité qu'à l'hébergeur.",
+      "gravite": "critique",
+      "applicabilite": "professionnel",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "mentions_legales",
+          "cgu",
+          "cgv",
+          "accueil"
+        ],
+        "motifs": [
+          "\\b[ée]dit[ée]?s?\\s+par",
+          "[ée]diteur\\s+du\\s+site",
+          "[ée]diteur\\s*:",
+          "raison\\s+sociale",
+          "d[ée]nomination\\s+sociale",
+          "soci[ée]t[ée]\\s+[^.]{0,60}au\\s+capital",
+          "\\bau\\s+capital\\s+de\\b",
+          "entrepreneur\\s+individuel"
+        ]
+      }
+    },
+    {
+      "id": "mentions_siege",
+      "theme": "Mentions légales",
+      "description": "Adresse du siège social (personne morale) ou adresse de l'entreprise.",
+      "reference_legale": {
+        "texte": "Loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN)",
+        "article": "1-1",
+        "legifrance_id": "LEGIARTI000049568614",
+        "url": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000049568614"
+      },
+      "verification": "Présence d'une mention « siège social » ou « adresse ».",
+      "gravite": "avertissement",
+      "applicabilite": "professionnel",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "mentions_legales",
+          "cgu",
+          "cgv",
+          "accueil"
+        ],
+        "motifs": [
+          "si[èe]ge\\s+social",
+          "si[èe]ge\\s*:",
+          "adresse\\s*(?:postale|du\\s+si[èe]ge)?\\s*:"
+        ]
+      }
+    },
+    {
+      "id": "mentions_contact",
+      "theme": "Mentions légales",
+      "description": "Coordonnées de contact de l'éditeur : numéro de téléphone et adresse électronique.",
+      "reference_legale": {
+        "texte": "Loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN)",
+        "article": "1-1",
+        "legifrance_id": "LEGIARTI000049568614",
+        "url": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000049568614"
+      },
+      "verification": "Présence d'une adresse e-mail ou d'un numéro de téléphone (masqués dans le résultat).",
+      "gravite": "avertissement",
+      "applicabilite": "professionnel",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "mentions_legales",
+          "cgu",
+          "cgv",
+          "accueil"
+        ],
+        "motifs": [
+          "[\\w.+-]+@[\\w-]+\\.[\\w.-]+",
+          "(?:\\+33\\s?|\\b0)[1-9](?:[\\s.\\-]?\\d{2}){4}\\b"
+        ]
+      }
+    },
+    {
+      "id": "mentions_siren",
+      "theme": "Mentions légales",
+      "description": "Numéro d'inscription au registre (RCS / RNE, numéro SIREN) pour une entreprise soumise à immatriculation. Le numéro trouvé est vérifié dans le répertoire officiel.",
+      "reference_legale": {
+        "texte": "Loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN)",
+        "article": "1-1",
+        "legifrance_id": "LEGIARTI000049568614",
+        "url": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000049568614"
+      },
+      "verification": "Un numéro SIREN valide (clé de Luhn) est trouvé près d'une mention SIREN, SIRET, RCS ou TVA, puis retrouvé dans l'API Recherche d'entreprises.",
+      "gravite": "critique",
+      "applicabilite": "professionnel",
+      "detection": {
+        "type": "siren"
+      },
+      "autres_references": [
+        {
+          "texte": "Loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN)",
+          "article": "19",
+          "legifrance_id": "LEGIARTI000032236011",
+          "url": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000032236011"
+        }
+      ]
+    },
+    {
+      "id": "directeur_publication",
+      "theme": "Mentions légales",
+      "description": "Nom du directeur ou du codirecteur de la publication.",
+      "reference_legale": {
+        "texte": "Loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN)",
+        "article": "1-1",
+        "legifrance_id": "LEGIARTI000049568614",
+        "url": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000049568614"
+      },
+      "verification": "Présence de la mention « directeur de la publication » (le nom n'est pas renvoyé).",
+      "gravite": "avertissement",
+      "applicabilite": "professionnel",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "mentions_legales",
+          "cgu",
+          "cgv",
+          "accueil"
+        ],
+        "motifs": [
+          "(?:co)?directeur\\s+(?:de\\s+(?:la\\s+)?)?publication",
+          "directrice\\s+(?:de\\s+(?:la\\s+)?)?publication",
+          "responsable\\s+(?:de\\s+(?:la\\s+)?)?publication"
+        ]
+      }
+    },
+    {
+      "id": "hebergeur",
+      "theme": "Mentions légales",
+      "description": "Identification de l'hébergeur du site (nom ou dénomination, adresse, téléphone).",
+      "reference_legale": {
+        "texte": "Loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN)",
+        "article": "1-1",
+        "legifrance_id": "LEGIARTI000049568614",
+        "url": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000049568614"
+      },
+      "verification": "Présence d'une mention « hébergeur » ou « hébergé par ».",
+      "gravite": "critique",
+      "applicabilite": "toujours",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "mentions_legales",
+          "cgu",
+          "cgv",
+          "accueil"
+        ],
+        "motifs": [
+          "h[ée]bergeur",
+          "h[ée]berg[ée]e?\\s+(?:par|chez)",
+          "h[ée]bergement\\s+(?:du\\s+site|:)",
+          "prestataire\\s+d.h[ée]bergement",
+          "\\bhosted\\s+by\\b"
+        ]
+      }
+    },
+    {
+      "id": "tva_intracommunautaire",
+      "theme": "Commerce électronique",
+      "description": "Numéro individuel d'identification à la TVA pour une activité de commerce électronique soumise à TVA.",
+      "reference_legale": {
+        "texte": "Loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique (LCEN)",
+        "article": "19",
+        "legifrance_id": "LEGIARTI000032236011",
+        "url": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000032236011"
+      },
+      "verification": "Présence d'un numéro de TVA intracommunautaire (FR + 11 caractères) ou de la mention « TVA intracommunautaire ».",
+      "gravite": "information",
+      "applicabilite": "e_commerce",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "cgv",
+          "cgu",
+          "mentions_legales",
+          "accueil"
+        ],
+        "motifs": [
+          "\\bFR\\s?[0-9A-Z]{2}\\s?\\d{3}\\s?\\d{3}\\s?\\d{3}\\b",
+          "TVA\\s+intra(?:communautaire)?",
+          "num[ée]ro\\s+(?:de\\s+)?TVA",
+          "identification\\s+(?:[àa]\\s+la\\s+)?TVA"
+        ]
+      }
+    },
+    {
+      "id": "politique_confidentialite_page",
+      "theme": "Données personnelles",
+      "description": "Une information sur le traitement des données personnelles (politique de confidentialité) est accessible.",
+      "reference_legale": {
+        "texte": "Règlement (UE) 2016/679 du 27 avril 2016 (RGPD)",
+        "article": "13",
+        "legifrance_id": "",
+        "url": "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32016R0679"
+      },
+      "verification": "Un lien « confidentialité », « données personnelles », « vie privée » ou équivalent est trouvé et la page est récupérée.",
+      "gravite": "critique",
+      "applicabilite": "toujours",
+      "detection": {
+        "type": "page",
+        "page": "confidentialite"
+      }
+    },
+    {
+      "id": "rgpd_responsable",
+      "theme": "Données personnelles",
+      "description": "Identité et coordonnées du responsable du traitement et, le cas échéant, du délégué à la protection des données.",
+      "reference_legale": {
+        "texte": "Règlement (UE) 2016/679 du 27 avril 2016 (RGPD)",
+        "article": "13, paragraphe 1, points a) et b)",
+        "legifrance_id": "",
+        "url": "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32016R0679"
+      },
+      "verification": "Présence de « responsable du traitement », « délégué à la protection des données » ou « DPO ».",
+      "gravite": "avertissement",
+      "applicabilite": "toujours",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "confidentialite",
+          "cookies",
+          "mentions_legales",
+          "cgu"
+        ],
+        "motifs": [
+          "responsables?\\s+(?:du|de\\s+(?:ce|ces|nos))\\s+traitements?",
+          "d[ée]l[ée]gu[ée]e?\\s+[àa]\\s+la\\s+protection\\s+des\\s+donn[ée]es",
+          "\\bDPO\\b"
+        ]
+      }
+    },
+    {
+      "id": "rgpd_finalites",
+      "theme": "Données personnelles",
+      "description": "Finalités du traitement des données.",
+      "reference_legale": {
+        "texte": "Règlement (UE) 2016/679 du 27 avril 2016 (RGPD)",
+        "article": "13, paragraphe 1, point c)",
+        "legifrance_id": "",
+        "url": "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32016R0679"
+      },
+      "verification": "Présence d'une mention des finalités (« finalité », « pourquoi nous collectons »...).",
+      "gravite": "avertissement",
+      "applicabilite": "toujours",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "confidentialite",
+          "cookies",
+          "mentions_legales",
+          "cgu"
+        ],
+        "motifs": [
+          "finalit[ée]s?",
+          "pourquoi\\s+(?:nous\\s+)?(?:collectons|utilisons|traitons)",
+          "(?:utilis[ée]es|trait[ée]es|collect[ée]es)\\s+(?:pour|afin\\s+de)"
+        ]
+      }
+    },
+    {
+      "id": "rgpd_base_legale",
+      "theme": "Données personnelles",
+      "description": "Base juridique du traitement.",
+      "reference_legale": {
+        "texte": "Règlement (UE) 2016/679 du 27 avril 2016 (RGPD)",
+        "article": "13, paragraphe 1, point c)",
+        "legifrance_id": "",
+        "url": "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32016R0679"
+      },
+      "verification": "Présence de « base légale », « fondement juridique », « intérêt légitime » ou « exécution du contrat ».",
+      "gravite": "avertissement",
+      "applicabilite": "toujours",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "confidentialite",
+          "cookies",
+          "mentions_legales",
+          "cgu"
+        ],
+        "motifs": [
+          "bases?\\s+(?:l[ée]gales?|juridiques?)",
+          "fondements?\\s+(?:juridiques?|l[ée]gaux?|l[ée]gal)",
+          "int[ée]r[êe]t\\s+l[ée]gitime",
+          "ex[ée]cution\\s+(?:du|d.un)\\s+contrat"
+        ]
+      }
+    },
+    {
+      "id": "rgpd_duree_conservation",
+      "theme": "Données personnelles",
+      "description": "Durée de conservation des données ou critères utilisés pour la déterminer.",
+      "reference_legale": {
+        "texte": "Règlement (UE) 2016/679 du 27 avril 2016 (RGPD)",
+        "article": "13, paragraphe 2, point a)",
+        "legifrance_id": "",
+        "url": "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32016R0679"
+      },
+      "verification": "Présence d'une mention de durée de conservation.",
+      "gravite": "avertissement",
+      "applicabilite": "toujours",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "confidentialite",
+          "cookies",
+          "mentions_legales",
+          "cgu"
+        ],
+        "motifs": [
+          "dur[ée]es?\\s+de\\s+conservation",
+          "conserv[ée]e?s?\\s+(?:pendant|durant|pour\\s+une\\s+dur[ée]e|jusqu)",
+          "conservons\\s+(?:vos|les)\\s+donn[ée]es"
+        ]
+      }
+    },
+    {
+      "id": "rgpd_droits",
+      "theme": "Données personnelles",
+      "description": "Information sur les droits de la personne (accès, rectification, effacement, opposition, portabilité...).",
+      "reference_legale": {
+        "texte": "Règlement (UE) 2016/679 du 27 avril 2016 (RGPD)",
+        "article": "13, paragraphe 2, point b)",
+        "legifrance_id": "",
+        "url": "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32016R0679"
+      },
+      "verification": "Présence d'au moins une mention de droit d'accès, de rectification, d'effacement, d'opposition ou de portabilité.",
+      "gravite": "critique",
+      "applicabilite": "toujours",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "confidentialite",
+          "cookies",
+          "mentions_legales",
+          "cgu"
+        ],
+        "motifs": [
+          "droits?\\s+d.acc[èe]s",
+          "droits?\\s+de\\s+rectification",
+          "droits?\\s+(?:[àa]\\s+l.)?effacement",
+          "droits?\\s+d.opposition",
+          "droits?\\s+[àa]\\s+la\\s+portabilit[ée]"
+        ]
+      }
+    },
+    {
+      "id": "rgpd_reclamation_cnil",
+      "theme": "Données personnelles",
+      "description": "Droit d'introduire une réclamation auprès d'une autorité de contrôle (la CNIL en France).",
+      "reference_legale": {
+        "texte": "Règlement (UE) 2016/679 du 27 avril 2016 (RGPD)",
+        "article": "13, paragraphe 2, point d)",
+        "legifrance_id": "",
+        "url": "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32016R0679"
+      },
+      "verification": "Présence de « CNIL », « autorité de contrôle » ou « réclamation ».",
+      "gravite": "avertissement",
+      "applicabilite": "toujours",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "confidentialite",
+          "cookies",
+          "mentions_legales",
+          "cgu"
+        ],
+        "motifs": [
+          "\\bCNIL\\b",
+          "autorit[ée]\\s+de\\s+contr[ôo]le",
+          "r[ée]clamation"
+        ]
+      }
+    },
+    {
+      "id": "cookies_information",
+      "theme": "Cookies et traceurs",
+      "description": "Information claire et complète sur les cookies et traceurs utilisés.",
+      "reference_legale": {
+        "texte": "Loi n° 78-17 du 6 janvier 1978 relative à l'informatique, aux fichiers et aux libertés",
+        "article": "82",
+        "legifrance_id": "LEGIARTI000037813978",
+        "url": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000037813978"
+      },
+      "verification": "Présence d'une page ou d'une section parlant des cookies ou traceurs. Exigée dès que des traceurs non essentiels sont utilisés.",
+      "gravite": "avertissement",
+      "applicabilite": "traceurs",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "cookies",
+          "confidentialite",
+          "mentions_legales",
+          "cgu"
+        ],
+        "motifs": [
+          "cookies?",
+          "traceurs?"
+        ]
+      }
+    },
+    {
+      "id": "cookies_consentement",
+      "theme": "Cookies et traceurs",
+      "description": "Les traceurs non essentiels (mesure d'audience, publicité, réseaux sociaux) ne doivent être déposés qu'après le consentement de l'internaute.",
+      "reference_legale": {
+        "texte": "Loi n° 78-17 du 6 janvier 1978 relative à l'informatique, aux fichiers et aux libertés",
+        "article": "82",
+        "legifrance_id": "LEGIARTI000037813978",
+        "url": "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000037813978"
+      },
+      "verification": "Recherche, dans le HTML initial de la page d'accueil, de scripts de traceurs connus chargés directement et d'un outil de gestion du consentement (CMP) connu. Le consentement effectif ne peut être testé automatiquement : au mieux « a_verifier ».",
+      "gravite": "critique",
+      "applicabilite": "toujours",
+      "detection": {
+        "type": "traceurs",
+        "chargeurs": [
+          "Google Tag Manager"
+        ]
+      }
+    },
+    {
+      "id": "ecommerce_cgv",
+      "theme": "Commerce électronique",
+      "description": "Conditions générales de vente et informations précontractuelles accessibles avant la commande.",
+      "reference_legale": {
+        "texte": "Code de la consommation",
+        "article": "L221-5",
+        "legifrance_id": "LEGIARTI000053310511",
+        "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053310511"
+      },
+      "verification": "Un lien « conditions générales de vente » (ou CGV) est trouvé et la page est récupérée.",
+      "gravite": "critique",
+      "applicabilite": "e_commerce",
+      "detection": {
+        "type": "page",
+        "page": "cgv"
+      },
+      "autres_references": [
+        {
+          "texte": "Code de la consommation",
+          "article": "L111-1",
+          "legifrance_id": "LEGIARTI000044142438",
+          "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000044142438"
+        }
+      ]
+    },
+    {
+      "id": "ecommerce_retractation",
+      "theme": "Commerce électronique",
+      "description": "Information sur l'existence, les conditions, le délai (14 jours) et les modalités du droit de rétractation.",
+      "reference_legale": {
+        "texte": "Code de la consommation",
+        "article": "L221-5",
+        "legifrance_id": "LEGIARTI000053310511",
+        "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053310511"
+      },
+      "verification": "Présence d'une mention du droit ou du délai de rétractation.",
+      "gravite": "critique",
+      "applicabilite": "e_commerce",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "cgv",
+          "cgu",
+          "mentions_legales",
+          "accueil"
+        ],
+        "motifs": [
+          "droit\\s+de\\s+r[ée]tractation",
+          "d[ée]lai\\s+de\\s+r[ée]tractation",
+          "r[ée]tractation"
+        ]
+      },
+      "autres_references": [
+        {
+          "texte": "Code de la consommation",
+          "article": "L221-18",
+          "legifrance_id": "LEGIARTI000032226842",
+          "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032226842"
+        }
+      ]
+    },
+    {
+      "id": "ecommerce_mediateur",
+      "theme": "Commerce électronique",
+      "description": "Coordonnées du ou des médiateurs de la consommation compétents et adresse de leur site internet, de manière visible sur le site.",
+      "reference_legale": {
+        "texte": "Code de la consommation",
+        "article": "L616-1",
+        "legifrance_id": "LEGIARTI000032224762",
+        "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032224762"
+      },
+      "verification": "Présence d'une mention « médiateur de la consommation » ou « médiation de la consommation ».",
+      "gravite": "critique",
+      "applicabilite": "e_commerce",
+      "detection": {
+        "type": "mots_cles",
+        "pages": [
+          "cgv",
+          "cgu",
+          "mentions_legales",
+          "accueil"
+        ],
+        "motifs": [
+          "m[ée]diat(?:eur|rice|ion)\\s+(?:de\\s+la\\s+)?consommation",
+          "m[ée]diat(?:eur|rice)\\b",
+          "service\\s+de\\s+m[ée]diation",
+          "m[ée]diation\\s+(?:de\\s+la\\s+)?consommation",
+          "\\bL\\.?\\s?612-1\\b"
+        ]
+      },
+      "autres_references": [
+        {
+          "texte": "Code de la consommation",
+          "article": "R616-1",
+          "legifrance_id": "LEGIARTI000032808378",
+          "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032808378"
+        },
+        {
+          "texte": "Code de la consommation",
+          "article": "L612-1",
+          "legifrance_id": "LEGIARTI000032224805",
+          "url": "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032224805"
+        }
+      ]
+    }
+  ],
+  "signatures": {
+    "liens": {
+      "mentions_legales": {
+        "texte": [
+          "mentions?\\s+l[ée]gales",
+          "informations?\\s+l[ée]gales",
+          "legal\\s+notice",
+          "\\bimprint\\b",
+          "^mentions$"
+        ],
+        "adresse": [
+          "mentions?[-_]?l[ée]gales",
+          "legal[-_]?notice",
+          "informations?[-_]l[ée]gales",
+          "imprint"
+        ]
+      },
+      "confidentialite": {
+        "texte": [
+          "confidentialit[ée]",
+          "donn[ée]es\\s+personnelles",
+          "vie\\s+priv[ée]e",
+          "privacy",
+          "\\brgpd\\b",
+          "protection\\s+des\\s+donn[ée]es"
+        ],
+        "adresse": [
+          "confidentialit",
+          "privacy",
+          "donnees[-_]personnelles",
+          "\\brgpd\\b",
+          "vie[-_]privee",
+          "protection[-_]des[-_]donnees"
+        ]
+      },
+      "cookies": {
+        "texte": [
+          "cookies?",
+          "traceurs"
+        ],
+        "adresse": [
+          "cookie",
+          "traceurs"
+        ]
+      },
+      "cgv": {
+        "texte": [
+          "conditions\\s+g[ée]n[ée]rales\\s+de\\s+vente",
+          "\\bcgv\\b",
+          "conditions\\s+de\\s+vente",
+          "terms\\s+of\\s+sale"
+        ],
+        "adresse": [
+          "\\bcgv\\b",
+          "conditions[-_]generales[-_]de[-_]vente",
+          "conditions[-_]de[-_]vente",
+          "terms[-_]of[-_]sale"
+        ]
+      },
+      "cgu": {
+        "texte": [
+          "conditions\\s+g[ée]n[ée]rales\\s+d.utilisation",
+          "\\bcgu\\b",
+          "conditions\\s+d.utilisation",
+          "terms\\s+of\\s+(?:use|service)"
+        ],
+        "adresse": [
+          "\\bcgu\\b",
+          "conditions[-_]generales[-_]d[-_]?utilisation",
+          "conditions[-_]d[-_]?utilisation",
+          "terms[-_]of[-_](?:use|service)"
+        ]
+      }
+    },
+    "traceurs": {
+      "Google Analytics / Google Ads (gtag.js)": [
+        "googletagmanager.com/gtag/js",
+        "google-analytics.com/analytics.js",
+        "google-analytics.com/ga.js"
+      ],
+      "Google Tag Manager": [
+        "googletagmanager.com/gtm.js"
+      ],
+      "Google Ads / DoubleClick": [
+        "googleadservices.com/pagead",
+        "doubleclick.net"
+      ],
+      "Meta Pixel (Facebook)": [
+        "connect.facebook.net",
+        "fbevents.js"
+      ],
+      "Hotjar": [
+        "static.hotjar.com",
+        "script.hotjar.com"
+      ],
+      "LinkedIn Insight Tag": [
+        "snap.licdn.com"
+      ],
+      "TikTok Pixel": [
+        "analytics.tiktok.com"
+      ],
+      "Microsoft Clarity": [
+        "clarity.ms/tag"
+      ],
+      "Microsoft Bing UET": [
+        "bat.bing.com"
+      ],
+      "Pinterest Tag": [
+        "s.pinimg.com/ct/core.js"
+      ],
+      "Snap Pixel": [
+        "sc-static.net/scevent"
+      ],
+      "X (Twitter) Pixel": [
+        "static.ads-twitter.com"
+      ],
+      "Criteo": [
+        "static.criteo.net"
+      ],
+      "Yandex Metrica": [
+        "mc.yandex.ru/metrika"
+      ]
+    },
+    "cookies_traceurs": [
+      "_ga",
+      "_gid",
+      "_gcl",
+      "_fbp",
+      "_hj",
+      "_uet",
+      "_clck",
+      "_clsk",
+      "_ttp",
+      "_pin_unauth"
+    ],
+    "cmp": {
+      "Didomi": [
+        "sdk.privacy-center.org",
+        "didomi"
+      ],
+      "OneTrust": [
+        "cdn.cookielaw.org",
+        "optanon",
+        "onetrust"
+      ],
+      "Axeptio": [
+        "axept.io",
+        "axeptio"
+      ],
+      "Tarteaucitron": [
+        "tarteaucitron"
+      ],
+      "Cookiebot": [
+        "consent.cookiebot.com",
+        "cookiebot"
+      ],
+      "Usercentrics": [
+        "usercentrics"
+      ],
+      "Quantcast Choice": [
+        "quantcast.mgr.consensu.org",
+        "cmp.quantcast.com"
+      ],
+      "Sirdata": [
+        "cache.consentframework.com",
+        "choices.consentframework.com"
+      ],
+      "CookieYes": [
+        "cdn-cookieyes.com"
+      ],
+      "Complianz": [
+        "complianz"
+      ],
+      "iubenda": [
+        "iubenda.com"
+      ],
+      "Klaro": [
+        "klaro.js",
+        "klaro.min.js",
+        "klaro-config"
+      ],
+      "TrustCommander (Commanders Act)": [
+        "trustcommander",
+        "cdn.tagcommander.com"
+      ],
+      "Osano": [
+        "cmp.osano.com"
+      ],
+      "Termly": [
+        "app.termly.io"
+      ],
+      "Cookie Script": [
+        "cookie-script.com"
+      ],
+      "Orejime": [
+        "orejime"
+      ],
+      "Sourcepoint": [
+        "sourcepoint",
+        "sp-prod.net"
+      ],
+      "consentmanager.net": [
+        "consentmanager.net"
+      ],
+      "CookieFirst": [
+        "cookiefirst.com"
+      ],
+      "Cookie Notice (WordPress)": [
+        "cookie-notice-js",
+        "cn-notice"
+      ],
+      "Shopify Customer Privacy": [
+        "customerprivacy",
+        "shopify-privacy-banner"
+      ],
+      "Google Funding Choices": [
+        "fundingchoicesmessages.google.com"
+      ]
+    },
+    "e_commerce": [
+      "ajouter\\s+au\\s+panier",
+      "add\\s+to\\s+(?:cart|basket|bag)",
+      "(?:mon|votre)\\s+panier",
+      "href=[\\\"'][^\\\"']*/(?:panier|cart|checkout|basket|commande)(?:[/\\\"'?#])",
+      "wp-content/plugins/woocommerce",
+      "cdn\\.shopify\\.com",
+      "var\\s+prestashop\\s*=",
+      "Magento_[A-Z]",
+      "passer\\s+(?:la\\s+|ma\\s+)?commande"
+    ],
+    "professionnel": [
+      "\\bau\\s+capital\\s+(?:social\\s+)?de\\b",
+      "(?-i:\\b(?:SAS|SASU|SARL|EURL|SNC|SCOP)\\b)",
+      "\\bRCS\\b",
+      "\\bR\\.C\\.S\\.",
+      "entrepreneur\\s+individuel",
+      "micro-entrep"
+    ],
+    "siren": [
+      "(?:siren|siret|rcs|r\\.c\\.s\\.?|rne|immatricul[ée]e?|registre\\s+du\\s+commerce)[^0-9]{0,40}?(\\d{3}[\\s.\\u00a0]?\\d{3}[\\s.\\u00a0]?\\d{3})",
+      "\\bFR\\s?[0-9]{2}\\s?(\\d{3}\\s?\\d{3}\\s?\\d{3})\\b"
+    ]
+  }
 }
