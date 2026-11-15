@@ -18,7 +18,7 @@ from groq.types.chat import ChatCompletion
 from mcp.types import CallToolResult, TextContent
 
 import app.main as application
-from app.rapport import construire_rapport
+from app.rapport import construire_rapport, rapport_depuis_outils
 
 SOURCE = {"titre": "Texte officiel simulé", "reference": "Article de test",
           "url": "https://www.legifrance.gouv.fr/loda/article_lc/ARTICLE_TEST",
@@ -97,6 +97,7 @@ def simulation(monkeypatch):
             return reponse
 
     monkeypatch.setattr(application.config, "GROQ_API_KEY", "valeur-simulee")
+    monkeypatch.setattr(application.config, "GROQ_MODEL_SECOURS", "")
     monkeypatch.setattr(application, "ouvrir_mcp", mcp_simule)
     monkeypatch.setattr(application, "AsyncGroq", GroqSimule)
     return etat
@@ -181,6 +182,74 @@ def test_resultat_site_compact_sans_perte_des_preuves():
 ])
 def test_resultat_vide_ou_erreur_conserve(resultat):
     assert json.loads(application.resultat_pour_modele(resultat)) == resultat
+
+
+def test_statuts_https_rgpd_restitues_sans_second_appel(client, simulation):
+    reference = {"texte": "Règlement UE 2016/679", "article": "13", "legifrance_id": "",
+                 "url": "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32016R0679"}
+    source = {**SOURCE, "reference": "Règlement UE 2016/679, article 13", "url": reference["url"]}
+    identifiants = ["https", "rgpd_responsable", "rgpd_finalites", "rgpd_base_legale",
+                    "rgpd_duree_conservation", "rgpd_droits", "rgpd_reclamation_cnil"]
+    simulation.resultat = {"statut": "ok", "sources": [source], "analyse": {"verifications": [
+        {"id": identifiant, "statut": "conforme", "preuve": "Mention effectivement détectée",
+         "reference": reference} for identifiant in identifiants
+    ]}}
+    resultat = client.post("/api/chat", json={"message": "Analyse https://exemple.fr"}).json()
+    assert resultat["statut"] == "ok"
+    assert len(simulation.demandes) == 1
+    assert len(resultat["points"]) == 7
+    assert all(p["statut"] == "conforme" for p in resultat["points"])
+    assert resultat["sources"] == [source]
+    simulation.resultat["sources"][0]["reference"] = ""
+    rapport = rapport_depuis_outils([simulation.resultat])
+    assert all(p["statut"] == "a_verifier" for p in rapport["points"])
+    assert any("Référence légale à rechercher" in s for s in rapport["informations_manquantes"])
+
+
+def test_rapport_structures_vides_et_erreur():
+    assert rapport_depuis_outils([]) is None
+    assert rapport_depuis_outils([{"statut": "erreur", "erreur": "API indisponible"}]) is None
+    rapport = rapport_depuis_outils([{"statut": "ok", "entreprises": [], "sources": []}])
+    assert rapport["points"][0]["statut"] == "a_verifier"
+    assert any("Aucune entreprise" in s for s in rapport["informations_manquantes"])
+
+
+def test_rapport_article_et_identite_sans_reformulation():
+    resultat = {"statut": "ok", "sources": [SOURCE], "article": {
+        "id": SOURCE["reference"], "url": SOURCE["url"], "titre": "Texte officiel",
+        "numero_article": "1-1", "texte": PREUVE,
+    }}
+    rapport = rapport_depuis_outils([resultat])
+    assert rapport["points"][0]["reference"] == SOURCE["reference"]
+    assert rapport["points"][0]["preuve"] == PREUVE
+    assert rapport["points"][0]["statut"] == "a_verifier"
+    rapport = rapport_depuis_outils([{"statut": "ok", "sources": [], "entreprises": [
+        {"nom": "EXEMPLE", "siren": "500569405", "etat": "active"}
+    ]}])
+    assert [p["preuve"] for p in rapport["points"]] == ["EXEMPLE", "500569405", "active"]
+    assert all(p["statut"] == "a_verifier" for p in rapport["points"])
+
+
+def test_recherche_compacte_garde_identifiants_et_sources():
+    resultat = {"statut": "ok", "sources": [SOURCE], "textes": [
+        {"id": "LEGIARTI000049568614", "texte": "Texte officiel " * 1000, "url": SOURCE["url"]}
+    ]}
+    compact = json.loads(application.resultat_pour_modele(resultat))
+    assert len(compact["textes"][0]["texte"]) == 1000
+    assert compact["textes"][0]["id"] == resultat["textes"][0]["id"]
+    assert compact["sources"] == resultat["sources"]
+    assert len(resultat["textes"][0]["texte"]) > 1000
+
+
+def test_secours_sur_429_pas_sur_autre_erreur(client, simulation, monkeypatch):
+    monkeypatch.setattr(application.config, "GROQ_MODEL_SECOURS", "modele-secours-simule")
+    reponse = httpx.Response(429, request=httpx.Request("POST", "https://api.groq.com"))
+    simulation.reponses.insert(0, groq.RateLimitError("quota", response=reponse, body={}))
+    resultat = client.post("/api/chat", json={"message": "Mon projet"}).json()
+    assert resultat["statut"] == "ok"
+    assert resultat["modeles_utilises"] == [application.config.GROQ_MODEL, "modele-secours-simule"]
+    assert simulation.demandes[1]["model"] == "modele-secours-simule"
+    assert simulation.demandes[2]["model"] == "modele-secours-simule"
 
 
 @pytest.mark.parametrize("attente,reprise", [("1", True), ("61", False), ("invalide", False)])

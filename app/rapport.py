@@ -75,6 +75,51 @@ def conclusion_globale(texte: str) -> bool:
     ))
 
 
+def rapport_depuis_outils(resultats: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Restitue les constats structurés sans demander à l'IA de les réécrire.
+
+    Les statuts du moteur restent souverains ; la validation des références
+    et preuves est la même que pour une proposition du modèle.
+    """
+    points = []
+    limites = []
+    for resultat in resultats:
+        if resultat.get("statut") != "ok":
+            continue
+        analyse = resultat.get("analyse", {})
+        for constat in analyse.get("verifications", []):
+            reference = constat["reference"]
+            points.append({
+                "point": constat["id"].replace("_", " "), "statut": constat["statut"],
+                "preuve": constat["preuve"], "url": reference.get("url", ""),
+                "reference": reference.get("legifrance_id") or
+                    f"{reference['texte']}, article {reference['article']}",
+            })
+        if analyse.get("limites"):
+            limites.append(analyse["limites"])
+        if "entreprises" in resultat:
+            limites.extend([resultat.get("message", ""), resultat.get("avertissement", "")])
+            for entreprise in resultat["entreprises"]:
+                for cle in ("nom", "siren", "etat"):
+                    points.append({"point": f"Identité publique — {cle}", "statut": "a_verifier",
+                                   "preuve": entreprise.get(cle) or "", "reference": "", "url": ""})
+            if not resultat["entreprises"]:
+                limites.append("Aucune entreprise trouvée ; aucune identité n'est établie.")
+        article = resultat.get("article")
+        if article:
+            points.append({
+                "point": f"Article {article.get('numero_article') or ''} — {article.get('titre') or article['id']}"[:250],
+                "statut": "a_verifier", "preuve": article["texte"][:1200],
+                "reference": article["id"], "url": article["url"],
+            })
+            limites.append("Articles consultés : extraits, état et applicabilité à vérifier ; aucune conformité n'est déduite de leur lecture.")
+    if not points and not limites:
+        return None
+    return construire_rapport(json.dumps({
+        "points": points[:30], "informations_manquantes": [limite for limite in limites if limite][:30],
+    }, ensure_ascii=False), resultats)
+
+
 def construire_rapport(contenu: str, resultats: list[dict[str, Any]]) -> dict[str, Any]:
     """Un constat sans source connue ou preuve exacte devient a_verifier."""
     try:

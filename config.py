@@ -20,5 +20,6 @@ LEGIFRANCE_BASE_URL = (
 )
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+GROQ_MODEL_SECOURS = os.getenv("GROQ_MODEL_SECOURS", "openai/gpt-oss-20b")
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
 TIMEOUT_S = float(os.getenv("TIMEOUT_S", "20"))

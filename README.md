@@ -69,11 +69,24 @@ l'applicabilité des textes et faites valider les décisions importantes.
   outils avec `list_tools`. Les arguments demandés par le modèle sont exécutés
   uniquement par `call_tool`, jamais par un accès direct de l'IA aux API métier.
 - Le client officiel `groq` utilise `GROQ_MODEL` de `config.py` (par défaut
-  `openai/gpt-oss-120b`). Les appels sont limités à six tours, douze outils
-  et 180 secondes. Une erreur 429 avec `Retry-After` de 0 à 60 secondes
-  autorise une seule reprise par requête Groq, dans ce même délai total.
-  Au-delà, le quota est signalé sans boucle de tentatives. Les résultats de
-  site envoyés au modèle sont allégés ; les preuves et sources restent entières.
+  `openai/gpt-oss-120b`). Les appels sont limités à trois tours, six outils,
+  1200 jetons de sortie par appel et 180 secondes. Sur 429, le secours
+  `GROQ_MODEL_SECOURS` (défaut `openai/gpt-oss-20b`, vide pour désactiver)
+  est essayé. Si nécessaire, un `Retry-After` de 0 à 60 secondes autorise
+  une seule reprise, dans ce même délai total. Aucun contournement de quota.
+- Les constats structurés de site, identités et articles sont rendus directement
+  après les appels MCP, sans second appel à Groq pour les reformuler. Les statuts
+  du moteur sont conservés, sauf preuve/référence invalide. Les identités et
+  articles seuls ne prouvent aucune conformité (`a_verifier`). Les extraits de
+  recherche transmis au modèle sont limités à 1000 caractères ; les résultats
+  complets restent utilisés pour la validation. `modeles_utilises` et
+  `consommation` exposent les modèles essayés et les jetons des appels réussis.
+- Limites gratuites documentées (indicatives, à vérifier pour votre compte) :
+  GPT-OSS 120b, GPT-OSS 20b et Qwen3.8-27b : 30 requêtes/minute,
+  1000/jour, 8000 jetons/minute, 200000/jour. Les limites s'appliquent à
+  l'organisation ; le secours ne garantit pas la disponibilité.
+  Source : https://console.groq.com/docs/rate-limits ; espacer les analyses
+  si les quotas sont partagés avec d'autres utilisateurs.
 - Les règles juridiques appartiennent aux outils. Le rapport n'accepte une
   référence que si son couple référence/URL figure dans les `sources` d'un
   outil réussi. Les liens juridiques HTTPS acceptés sont ceux de Légifrance,
