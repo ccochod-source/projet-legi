@@ -111,6 +111,14 @@ def _applicable(applicabilite: str, contexte: dict[str, Any]) -> bool:
     return True
 
 
+def _url_non_lue(contexte: dict[str, Any], pages: tuple[str, ...]) -> str | None:
+    """URL de la première page liée mais non récupérée parmi ces pages."""
+    for type_page in pages:
+        if type_page in contexte["erreurs_pages"]:
+            return contexte["erreurs_pages"][type_page]["url"]
+    return None
+
+
 def _absent(
     obligation: dict[str, Any], contexte: dict[str, Any], explication: str, pages: tuple[str, ...] = ()
 ) -> tuple[str, str]:
@@ -156,7 +164,8 @@ def _detecter_mots_cles(obligation, contexte):
     lues = [contexte["pages"][t]["url"] for t in detection["pages"] if t in contexte["pages"]]
     explication = "Mention non trouvée dans les pages lues : " + (", ".join(lues) or "aucune") + "."
     statut, preuve = _absent(obligation, contexte, explication, tuple(detection["pages"]))
-    return statut, preuve, (lues[0] if lues else contexte["url_finale"])
+    pages = tuple(detection["pages"])
+    return statut, preuve, (_url_non_lue(contexte, pages) or (lues[0] if lues else contexte["url_finale"]))
 
 
 def _detecter_https(obligation, contexte):
@@ -170,9 +179,9 @@ def _detecter_siren(obligation, contexte):
     resultat = contexte.get("siren") or {}
     if resultat.get("statut") in STATUTS:
         return resultat["statut"], resultat["preuve"], resultat.get("url_preuve")
-    statut, preuve = _absent(obligation, contexte, "Aucun numéro SIREN, SIRET ou RCS trouvé dans les pages lues.",
-        ("mentions_legales", "cgv", "cgu"))
-    return statut, preuve, contexte["url_finale"]
+    pages = ("mentions_legales", "cgv", "cgu")
+    statut, preuve = _absent(obligation, contexte, "Aucun numéro SIREN, SIRET ou RCS trouvé dans les pages lues.", pages)
+    return statut, preuve, _url_non_lue(contexte, pages) or contexte["url_finale"]
 
 
 def _detecter_traceurs(obligation, contexte):
