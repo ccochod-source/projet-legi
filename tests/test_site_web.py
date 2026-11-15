@@ -10,7 +10,12 @@ from bs4 import BeautifulSoup
 import clients.web as web
 import outils.site_web as site_web
 from erreurs import ErreurOutil
-from outils.site_web import analyser_site, detecter_e_commerce, trouver_liens_legaux
+from outils.site_web import (
+    analyser_site,
+    analyser_traceurs,
+    detecter_e_commerce,
+    trouver_liens_legaux,
+)
 from regles.moteur import STATUTS, _valider, charger_regles, masquer_donnees
 
 CLES_SOURCE = {"titre", "reference", "url", "date_recuperation"}
@@ -104,12 +109,13 @@ def test_redirection_suivie_et_user_agent():
     def gestionnaire(requete):
         requetes.append(requete)
         if requete.url.path == "/":
-            return httpx.Response(301, headers={"Location": "https://www.exemple.fr/accueil"})
-        return page_html(en_tetes={"Set-Cookie": "_ga=GA1.2.secret; Path=/"})
+            return httpx.Response(301, headers={"Location": "https://www.exemple.fr/accueil",
+                                                "Set-Cookie": "_ga=GA1.2.secret; Path=/"})
+        return page_html(en_tetes={"Set-Cookie": "session=abc; Path=/"})
 
     page = recuperer("https://exemple.fr/", gestionnaire)
     assert page["url"] == "https://www.exemple.fr/accueil"
-    assert page["cookies_deposes"] == ["_ga"]
+    assert page["cookies_deposes"] == ["_ga", "session"]
     assert "secret" not in json.dumps(page["cookies_deposes"])
     assert all(r.url.host == "93.184.216.34" for r in requetes)
     assert requetes[1].headers["Host"] == "www.exemple.fr"
@@ -155,6 +161,24 @@ def test_liens_legaux_priorite_au_motif_le_plus_fiable():
     assert liens["confidentialite"] == "https://exemple.fr/donnees-personnelles"
     assert liens["mentions_legales"] == "https://exemple.fr/mentions"
     assert liens["cgv"] == "https://exemple.fr/cgv"
+
+
+def test_liens_legaux_avec_balise_base():
+    html = '<base href="/fr/"><a href="mentions-legales">Mentions légales</a>'
+    liens = trouver_liens_legaux(BeautifulSoup(html, "html.parser"), "https://exemple.fr/accueil",
+                                 charger_regles()["signatures"]["liens"])
+    assert liens["mentions_legales"] == "https://exemple.fr/fr/mentions-legales"
+
+
+def test_traceur_bloque_seulement_si_type_non_executable():
+    signatures = charger_regles()["signatures"]
+    html = """
+      <script data-category="analytics" src="https://connect.facebook.net/fbevents.js"></script>
+      <script type="text/plain" data-cookieconsent="statistics" src="https://static.hotjar.com/c/hotjar.js"></script>
+    """
+    traceurs, cmp = analyser_traceurs(html, [], signatures)
+    assert traceurs["actifs"] == ["Meta Pixel (Facebook)"]
+    assert traceurs["bloques"] == ["Hotjar"]
 
 
 def test_e_commerce_sans_faux_positif_sur_le_texte():
@@ -301,6 +325,9 @@ def test_page_legale_en_erreur_signalee(monkeypatch):
     analyse = asyncio.run(analyser_site("https://exemple.fr/"))["analyse"]
     assert analyse["pages_non_recuperees"][0]["type"] == "cgv"
     assert "404" in analyse["pages_non_recuperees"][0]["erreur"]
+    points = {v["id"]: v for v in analyse["verifications"]}
+    assert points["ecommerce_retractation"]["statut"] == "a_verifier"
+    assert "non récupérée" in points["ecommerce_retractation"]["preuve"]
 
 
 @pytest.mark.parametrize("url", ["", "file:///etc/passwd", "http://localhost", "http://127.0.0.1"])
