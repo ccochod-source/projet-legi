@@ -1,5 +1,20 @@
 # Projet Légi
 
+## Tableau de bord des sites
+
+Les analyses de site ajoutent un `tableau_de_bord` calculé côté serveur, jamais
+par l'IA. Les poids sont : critique = 3, avertissement = 2, information = 1.
+L'indice vaut `round(100 × poids(conformes) / poids(conformes + à corriger + à vérifier))`.
+Les points dont l'applicabilité n'est pas établie (professionnel, vente en ligne,
+traceurs) sont marqués explicitement par le moteur et exclus du dénominateur.
+Ils apparaissent sous « Non applicable » : cela reste à confirmer manuellement.
+Sans point évaluable, le score est nul (`null`), pas zéro. Les cinq thèmes ont
+leurs propres sous-scores. Les cartes affichent preuves, sources et actions
+concrètes ; « Voir le détail » conserve le tableau et les limites du rapport.
+**Indice des éléments détectés automatiquement, pas un verdict juridique.**
+Les réponses d'entreprise et de droit gardent leur présentation habituelle,
+et les champs `points` et `reponse` restent compatibles.
+
 ## Déploiement Vercel (Hobby) et historique Supabase
 
 Le point d'entrée `index.py` expose l'application FastAPI existante, selon la

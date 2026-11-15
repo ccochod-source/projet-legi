@@ -132,11 +132,12 @@ def _absent(
         )
     applicabilite = obligation.get("applicabilite", "toujours")
     if not _applicable(applicabilite, contexte):
+        contexte["applicable"] = False
         return "a_verifier", f"{explication} {EXPLICATIONS_APPLICABILITE[applicabilite]}"
     if not contexte["contenu_lisible"]:
         return "a_verifier", (
-            f"{explication} La page d'accueil contient très peu de texte "
-            "(site probablement généré en JavaScript) : vérification manuelle nécessaire."
+            f"{explication} La page contient très peu de texte (page minimale ou générée "
+            "en JavaScript) : vérification manuelle nécessaire."
         )
     if pages:
         if pages[0] not in contexte["pages"]:
@@ -164,6 +165,9 @@ def _detecter_page(obligation, contexte):
     if type_page in contexte["erreurs_pages"]:
         erreur = contexte["erreurs_pages"][type_page]
         return "a_verifier", f"Lien trouvé mais page non récupérée : {erreur['erreur']}", erreur["url"]
+    if not _applicable(obligation.get("applicabilite", "toujours"), contexte):
+        statut, preuve = _absent(obligation, contexte, "Aucun lien vers cette page trouvé dans les pages lues.")
+        return statut, preuve, contexte["url_finale"]
     autres = [p for t, p in contexte["pages"].items() if t != "accueil"]
     if not autres or contexte["erreurs_pages"] or any(
         len(p["texte"]) < LONGUEUR_TEXTE_LISIBLE for p in autres
@@ -256,10 +260,14 @@ def evaluer_obligations(regles: dict[str, Any], contexte: dict[str, Any]) -> lis
     """Applique chaque obligation au contexte du site et renvoie les vérifications."""
     verifications = []
     for obligation in regles["obligations"]:
+        contexte = {**contexte, "applicable": True}
         detecteur = DETECTEURS[obligation["detection"]["type"]]
         statut, preuve, url_preuve = detecteur(obligation, contexte)
         verifications.append({
             "id": obligation["id"],
+            "libelle": obligation.get("libelle", obligation["description"]),
+            "action": obligation.get("action", "Vérifiez ce point dans les pages légales."),
+            "applicable": contexte["applicable"],
             "theme": obligation["theme"],
             "description": obligation["description"],
             "statut": statut,

@@ -5,6 +5,8 @@
   "obligations": [
     {
       "id": "https",
+      "libelle": "Connexion HTTPS",
+      "action": "Activez HTTPS et redirigez toutes les pages HTTP vers HTTPS.",
       "theme": "Sécurité",
       "description": "Les échanges avec le site sont chiffrés (HTTPS), mesure de sécurité minimale des données transmises.",
       "reference_legale": {
@@ -22,6 +24,8 @@
     },
     {
       "id": "mentions_legales_page",
+      "libelle": "Page de mentions légales",
+      "action": "Ajoutez un lien accessible vers une page de mentions légales complète.",
       "theme": "Mentions légales",
       "description": "Une page de mentions légales identifiant l'éditeur et l'hébergeur est accessible.",
       "reference_legale": {
@@ -40,6 +44,8 @@
     },
     {
       "id": "mentions_editeur",
+      "libelle": "Identité de l’éditeur",
+      "action": "Indiquez le nom ou la raison sociale de l’éditeur dans les mentions légales.",
       "theme": "Mentions légales",
       "description": "Identité de l'éditeur : dénomination ou raison sociale (personne morale), ou nom et prénom (personne physique).",
       "reference_legale": {
@@ -73,6 +79,8 @@
     },
     {
       "id": "mentions_siege",
+      "libelle": "Adresse du siège",
+      "action": "Indiquez l’adresse du siège social dans les mentions légales.",
       "theme": "Mentions légales",
       "description": "Adresse du siège social (personne morale) ou adresse de l'entreprise.",
       "reference_legale": {
@@ -101,6 +109,8 @@
     },
     {
       "id": "mentions_contact",
+      "libelle": "Coordonnées de contact",
+      "action": "Indiquez les coordonnées de contact requises de l’éditeur.",
       "theme": "Mentions légales",
       "description": "Coordonnées de contact de l'éditeur : numéro de téléphone et adresse électronique.",
       "reference_legale": {
@@ -128,6 +138,8 @@
     },
     {
       "id": "mentions_siren",
+      "libelle": "Immatriculation de l’éditeur",
+      "action": "Vérifiez et affichez votre numéro SIREN et les informations d’immatriculation applicables.",
       "theme": "Mentions légales",
       "description": "Numéro d'inscription au registre (RCS / RNE, numéro SIREN) pour une entreprise soumise à immatriculation. Le numéro trouvé est vérifié dans le répertoire officiel.",
       "reference_legale": {
@@ -153,6 +165,8 @@
     },
     {
       "id": "directeur_publication",
+      "libelle": "Directeur de publication",
+      "action": "Nommez le directeur de la publication dans les mentions légales.",
       "theme": "Mentions légales",
       "description": "Nom du directeur ou du codirecteur de la publication.",
       "reference_legale": {
@@ -181,6 +195,8 @@
     },
     {
       "id": "hebergeur",
+      "libelle": "Identification de l’hébergeur",
+      "action": "Indiquez le nom, l’adresse et le téléphone de votre hébergeur dans les mentions légales.",
       "theme": "Mentions légales",
       "description": "Identification de l'hébergeur du site (nom ou dénomination, adresse, téléphone).",
       "reference_legale": {
@@ -211,6 +227,8 @@
     },
     {
       "id": "tva_intracommunautaire",
+      "libelle": "Numéro de TVA",
+      "action": "Vérifiez votre assujettissement et affichez le numéro de TVA intracommunautaire si nécessaire.",
       "theme": "Commerce électronique",
       "description": "Numéro individuel d'identification à la TVA pour une activité de commerce électronique soumise à TVA.",
       "reference_legale": {
@@ -240,6 +258,8 @@
     },
     {
       "id": "politique_confidentialite_page",
+      "libelle": "Politique de confidentialité",
+      "action": "Ajoutez un lien vers une politique de confidentialité lisible et adaptée à vos traitements.",
       "theme": "Données personnelles",
       "description": "Une information sur le traitement des données personnelles (politique de confidentialité) est accessible.",
       "reference_legale": {
@@ -258,6 +278,8 @@
     },
     {
       "id": "rgpd_responsable",
+      "libelle": "Responsable du traitement",
+      "action": "Identifiez le responsable du traitement et le contact pour les données personnelles.",
       "theme": "Données personnelles",
       "description": "Identité et coordonnées du responsable du traitement et, le cas échéant, du délégué à la protection des données.",
       "reference_legale": {
@@ -286,6 +308,8 @@
     },
     {
       "id": "rgpd_finalites",
+      "libelle": "Finalités du traitement",
+      "action": "Décrivez les finalités de chaque traitement dans la politique de confidentialité.",
       "theme": "Données personnelles",
       "description": "Finalités du traitement des données.",
       "reference_legale": {
@@ -314,6 +338,8 @@
     },
     {
       "id": "rgpd_base_legale",
+      "libelle": "Bases légales",
+      "action": "Précisez la base légale de chaque traitement de données personnelles.",
       "theme": "Données personnelles",
       "description": "Base juridique du traitement.",
       "reference_legale": {
@@ -343,6 +369,8 @@
     },
     {
       "id": "rgpd_duree_conservation",
+      "libelle": "Durées de conservation",
+      "action": "Précisez les durées de conservation ou leurs critères pour chaque traitement.",
       "theme": "Données personnelles",
       "description": "Durée de conservation des données ou critères utilisés pour la déterminer.",
       "reference_legale": {
@@ -371,6 +399,8 @@
     },
     {
       "id": "rgpd_droits",
+      "libelle": "Droits des personnes",
+      "action": "Expliquez les droits des personnes et les modalités pour les exercer.",
       "theme": "Données personnelles",
       "description": "Information sur les droits de la personne (accès, rectification, effacement, opposition, portabilité...).",
       "reference_legale": {
@@ -401,6 +431,8 @@
     },
     {
       "id": "rgpd_reclamation_cnil",
+      "libelle": "Réclamation auprès de la CNIL",
+      "action": "Mentionnez le droit de déposer une réclamation auprès de la CNIL.",
       "theme": "Données personnelles",
       "description": "Droit d'introduire une réclamation auprès d'une autorité de contrôle (la CNIL en France).",
       "reference_legale": {
@@ -429,6 +461,8 @@
     },
     {
       "id": "cookies_information",
+      "libelle": "Information sur les cookies",
+      "action": "Vérifiez les traceurs utilisés et décrivez leurs finalités et leurs durées.",
       "theme": "Cookies et traceurs",
       "description": "Information claire et complète sur les cookies et traceurs utilisés.",
       "reference_legale": {
@@ -456,6 +490,8 @@
     },
     {
       "id": "cookies_consentement",
+      "libelle": "Consentement aux traceurs",
+      "action": "Testez le refus des cookies et l’absence de traceurs non essentiels avant consentement.",
       "theme": "Cookies et traceurs",
       "description": "Les traceurs non essentiels (mesure d'audience, publicité, réseaux sociaux) ne doivent être déposés qu'après le consentement de l'internaute.",
       "reference_legale": {
@@ -476,6 +512,8 @@
     },
     {
       "id": "ecommerce_cgv",
+      "libelle": "Conditions générales de vente",
+      "action": "Rendez les CGV accessibles avant la commande et faites vérifier leur contenu.",
       "theme": "Commerce électronique",
       "description": "Conditions générales de vente et informations précontractuelles accessibles avant la commande.",
       "reference_legale": {
@@ -502,6 +540,8 @@
     },
     {
       "id": "ecommerce_retractation",
+      "libelle": "Droit de rétractation",
+      "action": "Précisez le délai de rétractation, ses exceptions et le formulaire applicable.",
       "theme": "Commerce électronique",
       "description": "Information sur l'existence, les conditions, le délai (14 jours) et les modalités du droit de rétractation.",
       "reference_legale": {
@@ -538,6 +578,8 @@
     },
     {
       "id": "ecommerce_mediateur",
+      "libelle": "Médiation de la consommation",
+      "action": "Indiquez les coordonnées et le site du médiateur de la consommation compétent.",
       "theme": "Commerce électronique",
       "description": "Coordonnées du ou des médiateurs de la consommation compétents et adresse de leur site internet, de manière visible sur le site.",
       "reference_legale": {

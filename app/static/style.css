@@ -6,6 +6,51 @@
   --doux: #5b685f;
   --ligne: #d9ded3;
   --accent: #d6e5b0;
+  --rouge: #a73c32;
+  --orange: #a3630c;
+  --vert: #357252;
+}
+.dashboard-entete { display: flex; align-items: center; gap: 24px; padding: 18px 0; }
+.dashboard-entete h3 { margin: 0 0 10px; font-size: 23px; line-height: 1.3; }
+.dashboard-avertissement { font-size: 14px; font-weight: 600; }
+.jauge { width: 138px; height: 138px; flex: 0 0 138px; position: relative; }
+.jauge svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.jauge circle { fill: none; stroke-width: 8; }
+.jauge .piste { stroke: var(--ligne); }
+.jauge .arc { stroke: currentColor; stroke-linecap: round; }
+.score-valeur { position: absolute; inset: 0; display: grid; place-items: center; font-size: 38px; }
+.rouge { color: var(--rouge); }
+.orange { color: var(--orange); }
+.vert { color: var(--vert); }
+.neutre { color: var(--doux); }
+.dashboard-themes { display: grid; gap: 13px; padding: 16px 0 24px; }
+.theme-score { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; font-size: 13px; }
+.theme-score span { color: var(--encre); }
+.theme-score progress { grid-column: 1 / -1; width: 100%; height: 8px; border: 0; border-radius: 8px; overflow: hidden; background: var(--ligne); }
+.theme-score progress::-webkit-progress-bar { background: var(--ligne); }
+.theme-score progress::-webkit-progress-value { background: currentColor; }
+.theme-score progress::-moz-progress-bar { background: currentColor; }
+.dashboard-compteurs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 25px; }
+.compteur { display: flex; flex-direction: column; padding: 12px 8px; border: 1px solid var(--ligne); border-radius: 10px; font-size: 11px; text-align: center; }
+.compteur strong { font-size: 25px; }
+.compteur.a_corriger { color: var(--rouge); }
+.compteur.a_verifier { color: var(--orange); }
+.compteur.conforme { color: var(--vert); }
+.dashboard-section { margin: 20px 0; }
+.dashboard-section h3 { font-size: 19px; }
+.carte-point { border: 1px solid var(--ligne); border-left: 3px solid var(--doux); border-radius: 8px; padding: 14px 16px; margin: 10px 0; overflow-wrap: anywhere; }
+.carte-point.a_corriger { border-left-color: var(--rouge); }
+.carte-point.a_verifier { border-left-color: var(--orange); }
+.carte-point.conforme { border-left-color: var(--vert); }
+.carte-point h4 { margin: 3px 0 8px; font-size: 16px; }
+.carte-point p { margin: 5px 0; }
+.carte-meta { color: var(--doux); font-size: 11px; }
+.carte-action { font-weight: 600; font-size: 14px; }
+.carte-preuve, .carte-point a { font-size: 12px; }
+#detail-rapport { margin-top: 22px; }
+@media (max-width: 500px) {
+  .dashboard-entete { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .dashboard-compteurs { grid-template-columns: repeat(2, 1fr); }
 }
 * {
   box-sizing: border-box;

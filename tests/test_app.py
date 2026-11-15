@@ -198,6 +198,8 @@ def test_statuts_https_rgpd_restitues_sans_second_appel(client, simulation):
     assert resultat["statut"] == "ok"
     assert len(simulation.demandes) == 1
     assert len(resultat["points"]) == 7
+    assert resultat["tableau_de_bord"]["score"] == 100
+    assert resultat["tableau_de_bord"]["compteurs"]["conforme"] == 7
     assert all(p["statut"] == "conforme" for p in resultat["points"])
     assert resultat["sources"] == [source]
     simulation.resultat["sources"][0]["reference"] = ""
