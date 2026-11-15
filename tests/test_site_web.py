@@ -174,10 +174,11 @@ def test_traceur_bloque_seulement_si_type_non_executable():
     signatures = charger_regles()["signatures"]
     html = """
       <script data-category="analytics" src="https://connect.facebook.net/fbevents.js"></script>
+      <script type="text/javascript; charset=utf-8" src="https://snap.licdn.com/insight.min.js"></script>
       <script type="text/plain" data-cookieconsent="statistics" src="https://static.hotjar.com/c/hotjar.js"></script>
     """
     traceurs, cmp = analyser_traceurs(html, [], signatures)
-    assert traceurs["actifs"] == ["Meta Pixel (Facebook)"]
+    assert traceurs["actifs"] == ["LinkedIn Insight Tag", "Meta Pixel (Facebook)"]
     assert traceurs["bloques"] == ["Hotjar"]
 
 
@@ -328,6 +329,7 @@ def test_page_legale_en_erreur_signalee(monkeypatch):
     points = {v["id"]: v for v in analyse["verifications"]}
     assert points["ecommerce_retractation"]["statut"] == "a_verifier"
     assert "non récupérée" in points["ecommerce_retractation"]["preuve"]
+    assert points["ecommerce_retractation"]["url_preuve"] == "https://exemple.fr/cgv-absente"
 
 
 @pytest.mark.parametrize("url", ["", "file:///etc/passwd", "http://localhost", "http://127.0.0.1"])
