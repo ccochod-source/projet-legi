@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 import clients.web as web
 import outils.site_web as site_web
 from erreurs import ErreurOutil
+from app.rapport import rapport_depuis_outils
 from outils.site_web import (
     analyser_site,
     analyser_traceurs,
@@ -317,9 +318,23 @@ def test_site_sans_pages_legales(monkeypatch):
     assert points["ecommerce_cgv"]["statut"] == "a_verifier"
     assert points["mentions_siren"]["statut"] == "a_verifier"
     assert points["mentions_siren"]["applicable"] is False
-    assert points["ecommerce_cgv"]["applicable"] is True
+    assert points["ecommerce_cgv"]["applicable"] is False
     assert points["ecommerce_retractation"]["applicable"] is False
     assert points["hebergeur"]["applicable"] is True
+
+
+@pytest.mark.parametrize("commerce", [False, True])
+def test_cgv_sans_liens_respecte_applicabilite(monkeypatch, commerce):
+    installer_faux_site(monkeypatch, accueil="<html><body><p>Example Domain</p></body></html>")
+    monkeypatch.setattr(site_web, "detecter_e_commerce", lambda *args: ["panier"] if commerce else [])
+    resultat = asyncio.run(analyser_site("https://exemple.fr/"))
+    cgv = par_id(resultat)["ecommerce_cgv"]
+    assert cgv["statut"] == "a_verifier"
+    assert cgv["applicable"] is commerce
+    tableau = rapport_depuis_outils([resultat])["tableau_de_bord"]
+    point = next(p for p in tableau["points"] if p["id"] == "ecommerce_cgv")
+    assert point["categorie"] == ("a_verifier" if commerce else "non_applicable")
+    assert tableau["sous_scores"]["Commerce électronique"] == (0 if commerce else None)
 
 
 def test_site_genere_en_javascript_donne_a_verifier(monkeypatch):

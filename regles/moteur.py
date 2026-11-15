@@ -165,6 +165,9 @@ def _detecter_page(obligation, contexte):
     if type_page in contexte["erreurs_pages"]:
         erreur = contexte["erreurs_pages"][type_page]
         return "a_verifier", f"Lien trouvé mais page non récupérée : {erreur['erreur']}", erreur["url"]
+    if not _applicable(obligation.get("applicabilite", "toujours"), contexte):
+        statut, preuve = _absent(obligation, contexte, "Aucun lien vers cette page trouvé dans les pages lues.")
+        return statut, preuve, contexte["url_finale"]
     autres = [p for t, p in contexte["pages"].items() if t != "accueil"]
     if not autres or contexte["erreurs_pages"] or any(
         len(p["texte"]) < LONGUEUR_TEXTE_LISIBLE for p in autres
