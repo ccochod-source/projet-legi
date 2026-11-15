@@ -1,0 +1,9 @@
+mcp[cli]>=1.20,<2
+httpx
+python-dotenv
+fastapi
+uvicorn
+# Client officiel Groq : appels d'outils compatibles OpenAI, sans adaptateur maison.
+groq
+beautifulsoup4
+pytest
