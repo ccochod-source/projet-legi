@@ -2,6 +2,30 @@
 const element = (identifiant) => document.getElementById(identifiant);
 let markdown = "";
 
+async function appelerApi(url, options = {}) {
+  const envoyer = () => fetch(url, {
+    ...options,
+    headers: {
+      ...options.headers,
+      "X-Code-Acces": sessionStorage.getItem("code-acces") || "",
+    },
+  });
+  let reponse = await envoyer();
+  if (reponse.status === 401) {
+    sessionStorage.removeItem("code-acces");
+    const code = window.prompt("Code d'accès à projet-legi :");
+    if (code) {
+      sessionStorage.setItem("code-acces", code);
+      reponse = await envoyer();
+    }
+    if (reponse.status === 401) {
+      sessionStorage.removeItem("code-acces");
+      throw new Error("Code d'accès absent ou incorrect. Rechargez la page pour réessayer.");
+    }
+  }
+  return reponse;
+}
+
 function ajouterTexte(parent, balise, texte, classe = "") {
   const noeud = document.createElement(balise);
   noeud.textContent = texte;
@@ -70,7 +94,7 @@ element("formulaire").addEventListener("submit", async (evenement) => {
   afficherOutils();
   markdown = "";
   try {
-    const reponse = await fetch("/api/chat", {
+    const reponse = await appelerApi("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message }),
@@ -110,14 +134,14 @@ element("telecharger").addEventListener("click", () => {
   setTimeout(() => URL.revokeObjectURL(adresse), 1000);
 });
 
-fetch("/api/etat")
+appelerApi("/api/etat")
   .then((reponse) => reponse.json())
   .then((etat) => {
     element("configuration").textContent = etat.groq_configure
       ? "Groq configuré · " + etat.modele
       : "Clé Groq manquante : relancez lancer.sh pour la renseigner.";
   })
-  .catch(() => {
+  .catch((erreur) => {
     element("configuration").textContent =
-      "Application indisponible. Relancez lancer.sh.";
+      erreur.message || "Application indisponible. Relancez lancer.sh.";
   });

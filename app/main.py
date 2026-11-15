@@ -1,5 +1,6 @@
 """Application locale : Groq propose, le serveur MCP vérifie."""
 
+import hmac
 import json
 import os
 import sys
@@ -17,17 +18,20 @@ from fastapi.staticfiles import StaticFiles
 from groq import AsyncGroq
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from mcp.shared.memory import create_connected_server_and_client_session
 from pydantic import BaseModel, Field, field_validator
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 import config
+from app.historique import enregistrer_analyse
 from app.rapport import construire_rapport, rapport_depuis_outils
 from erreurs import ErreurOutil, convertir_erreur
+from server import mcp
 
 RACINE = Path(__file__).resolve().parents[1]
 MAX_TOURS = 3
 MAX_APPELS = 6
-DELAI_ANALYSE_S = 180
+DELAI_ANALYSE_S = 50 if config.VERCEL else 180
 OUTILS_AUTORISES = {
     "analyser_site", "rechercher_textes_loi", "consulter_article", "verifier_entreprise",
 }
@@ -54,7 +58,10 @@ DESCRIPTIONS_OUTILS = {
 }
 
 app = FastAPI(title="Projet Légi", docs_url=None, redoc_url=None)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"])
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"] + (
+    ["*.vercel.app"] + [os.environ[nom] for nom in
+     ("VERCEL_URL", "VERCEL_PROJECT_PRODUCTION_URL") if os.environ.get(nom)]
+    if config.VERCEL else []))
 app.mount("/static", StaticFiles(directory=RACINE / "app/static"), name="static")
 
 
@@ -73,6 +80,12 @@ class RequeteDiscussion(BaseModel):
 @app.middleware("http")
 async def proteger_acces_local(requete: Request, suite):
     """Bloque les formulaires d'un autre site et la mise en cache des rapports."""
+    if requete.url.path.startswith("/api/") and config.APP_CODE_ACCES and not hmac.compare_digest(
+        requete.headers.get("X-Code-Acces", "").encode("utf-8"),
+        config.APP_CODE_ACCES.encode("utf-8"),
+    ):
+        return JSONResponse({"statut": "erreur", "erreur": "Code d'accès absent ou incorrect."},
+                            status_code=401, headers={"Cache-Control": "no-store"})
     origine = requete.headers.get("origin")
     if requete.method == "POST" and origine and origine != str(requete.base_url).rstrip("/"):
         return JSONResponse(convertir_erreur(ErreurOutil(
@@ -108,7 +121,13 @@ async def etat() -> dict[str, Any]:
 
 @asynccontextmanager
 async def ouvrir_mcp():
-    """Lance server.py avec le Python courant et ferme proprement le processus."""
+    """Ouvre une session MCP réelle, en mémoire ou avec un processus local."""
+    if config.MCP_TRANSPORT == "memoire":
+        async with create_connected_server_and_client_session(
+            mcp, read_timeout_seconds=timedelta(seconds=config.TIMEOUT_S + 5),
+        ) as session:
+            yield session
+        return
     parametres = StdioServerParameters(
         command=sys.executable, args=[str(RACINE / "server.py")], cwd=str(RACINE),
         env={"LEGIFRANCE_ENV": config.LEGIFRANCE_ENV,
@@ -321,10 +340,15 @@ async def analyser(message: str) -> dict[str, Any]:
 async def discuter(requete: RequeteDiscussion) -> dict[str, Any]:
     """Retourne un rapport sourcé ou une erreur sans détail sensible."""
     if not cle_disponible():
-        return convertir_erreur(ErreurOutil(
+        resultat = convertir_erreur(ErreurOutil(
             "Clé Groq absente. Relancez lancer.sh pour renseigner GROQ_API_KEY."
         ))
-    return await analyser(requete.message)
+    else:
+        resultat = await analyser(requete.message)
+    historique = await enregistrer_analyse(requete.message, resultat)
+    if historique is not None:
+        resultat["historique"] = historique
+    return resultat
 
 
 if __name__ == "__main__":

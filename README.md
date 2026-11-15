@@ -1,5 +1,50 @@
 # Projet Légi
 
+## Déploiement Vercel (Hobby) et historique Supabase
+
+Le point d'entrée `index.py` expose l'application FastAPI existante, selon la
+[détection Python/FastAPI Vercel](https://vercel.com/docs/frameworks/backend/fastapi).
+Importer le dépôt dans Vercel avec le framework FastAPI et la racine du dépôt ;
+aucun build frontend n'est nécessaire. `vercel.json` borne la fonction à 60 s ;
+l'analyse dispose de 50 s puis l'enregistrement de 5 s. Un dépassement reste
+possible sous charge : les longues analyses locales ne sont pas garanties sur Hobby.
+`.vercelignore` exclut notamment clés, environnement, tests et scripts du bundle.
+Les dépendances restent dans `requirements.txt` ; `lancer.sh` reste inchangé.
+
+Variables serveur à définir dans Vercel (puis redéployer) :
+- `GROQ_API_KEY`, `GROQ_MODEL` et éventuellement `GROQ_MODEL_SECOURS` ;
+- `LEGIFRANCE_ENV=sandbox`, `LEGIFRANCE_CLIENT_ID`, `LEGIFRANCE_CLIENT_SECRET` ;
+- `MCP_TRANSPORT=memoire` : session MCP SDK connectée au même serveur FastMCP,
+  avec initialisation, découverte et appels protocolaires, sans sous-processus.
+  Sans cette variable, `VERCEL` sélectionne automatiquement `memoire` ; hors
+  Vercel, le défaut reste `stdio`. Ne pas recopier `MCP_TRANSPORT=stdio` de
+  `.env.example` dans Vercel ;
+- `APP_CODE_ACCES` : code partagé long et aléatoire, **à définir avant de publier**.
+  Toutes les routes `/api/*` exigent alors `X-Code-Acces` ; la page le demande
+  et le garde en `sessionStorage` pour l'onglet. Sans variable, accès libre local.
+  Ce code n'est pas une authentification individuelle ni une protection anti-abus
+  complète. Les domaines `*.vercel.app` sont admis sur Vercel ; pour un domaine
+  personnalisé, configurer `VERCEL_PROJECT_PRODUCTION_URL` avec son nom d'hôte ;
+- `SUPABASE_URL=https://votre-projet.supabase.co` et `SUPABASE_SERVICE_ROLE_KEY`
+  (clé privilégiée **serveur uniquement**, jamais dans le navigateur).
+
+Dans l'éditeur SQL Supabase, exécuter `supabase/schema.sql` : table `analyses`,
+RLS activée, aucune politique publique, accès par service role seulement.
+Après chaque analyse, l'application tente une insertion PostgREST : question
+tronquée à 2000 caractères, rapport, outils, statut et modèles. Sans les deux
+variables, aucun historique ; en cas d'échec, la réponse reste disponible avec
+`historique: non_enregistre` et un avertissement sans détails sensibles.
+L'historique stocke le texte soumis et le rapport : ne pas saisir de secrets ni
+de données sensibles, et prévoir une suppression régulière dans Supabase.
+Il n'y a pas de route publique de lecture de l'historique.
+
+En local, `.env` reste utilisé et `lancer.sh` conserve MCP stdio par défaut.
+Pour tester le transport hébergé localement :
+`MCP_TRANSPORT=memoire APP_CODE_ACCES=code-de-test .venv/bin/python -m app.main`.
+Les quotas Groq/Supabase et les limites Vercel restent applicables ; aucune
+disponibilité ou conformité globale n'est garantie. Le déploiement et l'essai
+Supabase réel nécessitent vos secrets et sont à réaliser après configuration.
+
 Une application locale pour préparer la vérification juridique d'un site public
 ou d'un projet en France. Elle produit un tableau **point / statut / preuve /
 référence légale**, puis les informations manquantes. Les trois statuts sont
