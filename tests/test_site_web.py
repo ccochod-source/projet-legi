@@ -288,6 +288,9 @@ def test_analyse_complete(monkeypatch):
     assert "jean.dupont" not in texte and "01 23 45" not in texte
     assert "verdict" not in analyse and set(analyse["resume"]) == set(STATUTS)
     assert resultat["sources"] and all(set(s) == CLES_SOURCE for s in resultat["sources"])
+    sources_rgpd = [s for s in resultat["sources"] if "eur-lex.europa.eu" in s["url"]]
+    assert sources_rgpd and all(s["reference"] for s in sources_rgpd)
+    assert any("article 13" in s["reference"] for s in sources_rgpd)
 
 
 def test_cmp_detectee_donne_a_verifier(monkeypatch):

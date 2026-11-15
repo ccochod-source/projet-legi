@@ -238,7 +238,7 @@ def _sources(pages: dict[str, Any], regles: dict[str, Any], sources_api: list[di
             vues.add(cle)
             sources.append({
                 "titre": f"{ref['texte']}, article {ref['article']}",
-                "reference": ref.get("legifrance_id") or "",
+                "reference": ref.get("legifrance_id") or f"{ref['texte']}, article {ref['article']}",
                 "url": ref.get("url", ""),
                 "date_recuperation": regles["verifie_le"],
             })

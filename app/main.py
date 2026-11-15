@@ -38,6 +38,10 @@ Ne demande pas de noms de dirigeants ou de données personnelles inutiles.
 Pour une URL, commence par analyser_site ; pour un projet, rechercher_textes_loi.
 Les outils portent les règles métier. Une erreur ou un résultat vide ne prouve
 rien. L'immatriculation d'une entreprise ne prouve pas sa conformité.
+Pour une vérification d'entreprise, restitue seulement les faits d'identité
+reçus (nom, état, SIREN), pas des obligations supposées. Sans source juridique,
+garde a_verifier avec référence et URL vides ; la preuve doit être une valeur
+textuelle exacte, jamais un objet JSON ou un assemblage de plusieurs champs.
 Ne donne aucune conclusion globale de légalité ou de conseil définitif.
 Quand tu as terminé, réponds uniquement avec cet objet JSON :
 {"points":[{"point":"Une obligation précise", "statut":"a_verifier",
@@ -188,11 +192,48 @@ def message_erreur(erreur: Exception, phase: str) -> str:
         return "Délai d'analyse dépassé. Réessayez avec une demande plus précise."
     if isinstance(erreur, groq.APIConnectionError):
         return "Connexion à Groq impossible. Vérifiez votre accès Internet puis réessayez."
+    if isinstance(erreur, groq.NotFoundError):
+        return "Modèle Groq indisponible. Choisissez un modèle accessible dans GROQ_MODEL (.env), puis relancez l'application."
+    if isinstance(erreur, groq.APIStatusError) and erreur.status_code == 413:
+        return "Demande trop volumineuse pour le quota de jetons Groq. Réduisez le nombre de points ou de textes à analyser."
     if isinstance(erreur, groq.APIStatusError):
         return "Groq a refusé la demande. Vérifiez GROQ_MODEL et la disponibilité du service."
     if phase == "mcp":
         return "Le serveur MCP ne démarre pas. Relancez avec lancer.sh et vérifiez les dépendances."
     return "Réponse Groq inexploitable. Réessayez avec une demande plus précise."
+
+
+def resultat_pour_modele(resultat: dict[str, Any]) -> str:
+    """Évite de répéter les descriptions de règles dans le contexte Groq.
+
+    Le rapport est validé contre les résultats complets, conservés séparément.
+    Les preuves, statuts et sources ne sont pas tronqués.
+    """
+    analyse = resultat.get("analyse")
+    if resultat.get("statut") == "ok" and isinstance(analyse, dict) and "verifications" in analyse:
+        resultat = {"statut": "ok", "sources": resultat["sources"], "analyse": {
+            cle: analyse[cle] for cle in ("url_analysee", "resume", "avertissement", "limites")
+            if cle in analyse
+        } | {"verifications": [
+            {cle: point[cle] for cle in ("id", "statut", "preuve", "url_preuve", "reference") if cle in point}
+            for point in analyse["verifications"]
+        ]}}
+    return json.dumps(resultat, ensure_ascii=False, separators=(",", ":"))
+
+
+async def demander_completion(client, **parametres):
+    """Respecte un délai Retry-After court, une seule fois, sous le délai total."""
+    try:
+        return await client.chat.completions.create(**parametres)
+    except groq.RateLimitError as erreur:
+        try:
+            attente = float(erreur.response.headers.get("retry-after", ""))
+        except ValueError:
+            raise erreur
+        if not 0 <= attente <= 60:
+            raise
+        await anyio.sleep(attente)
+        return await client.chat.completions.create(**parametres)
 
 
 async def analyser(message: str) -> dict[str, Any]:
@@ -217,10 +258,9 @@ async def analyser(message: str) -> dict[str, Any]:
                 async with AsyncGroq(api_key=config.GROQ_API_KEY,
                                      timeout=config.TIMEOUT_S, max_retries=0) as client:
                     for _ in range(MAX_TOURS):
-                        completion = await client.chat.completions.create(
+                        completion = await demander_completion(client,
                             model=config.GROQ_MODEL, messages=messages, tools=outils,
                             tool_choice="auto", temperature=0, max_tokens=2500,
-                            response_format={"type": "json_object"},
                         )
                         choix = completion.choices[0]
                         proposition = choix.message
@@ -243,7 +283,7 @@ async def analyser(message: str) -> dict[str, Any]:
                             appels.append(trace)
                             resultats.append(resultat)
                             messages.append({"role": "tool", "tool_call_id": appel.id,
-                                             "content": json.dumps(resultat, ensure_ascii=False)})
+                                             "content": resultat_pour_modele(resultat)})
                     raise ErreurOutil("Limite de tours atteinte. Précisez une question ou une page à vérifier.")
     except Exception as erreur:
         return {**convertir_erreur(ErreurOutil(message_erreur(erreur, phase))), "outils_appeles": appels}

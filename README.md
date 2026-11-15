@@ -69,8 +69,11 @@ l'applicabilité des textes et faites valider les décisions importantes.
   outils avec `list_tools`. Les arguments demandés par le modèle sont exécutés
   uniquement par `call_tool`, jamais par un accès direct de l'IA aux API métier.
 - Le client officiel `groq` utilise `GROQ_MODEL` de `config.py` (par défaut
-  `llama-3.3-70b-versatile`). Les appels sont limités à six tours, douze outils
-  et 180 secondes, sans nouvelle tentative automatique payante ou cachée.
+  `openai/gpt-oss-120b`). Les appels sont limités à six tours, douze outils
+  et 180 secondes. Une erreur 429 avec `Retry-After` de 0 à 60 secondes
+  autorise une seule reprise par requête Groq, dans ce même délai total.
+  Au-delà, le quota est signalé sans boucle de tentatives. Les résultats de
+  site envoyés au modèle sont allégés ; les preuves et sources restent entières.
 - Les règles juridiques appartiennent aux outils. Le rapport n'accepte une
   référence que si son couple référence/URL figure dans les `sources` d'un
   outil réussi. Les liens juridiques HTTPS acceptés sont ceux de Légifrance,

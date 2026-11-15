@@ -140,6 +140,7 @@ def test_cycle_complet(client, simulation):
     assert resultat["outils_appeles"] == [{"nom": "analyser_site", "statut": "ok"}]
     assert simulation.appels == [("analyser_site", {"url": "https://exemple.fr"})]
     assert simulation.demandes[0]["tools"][0]["function"]["name"] == "analyser_site"
+    assert "response_format" not in simulation.demandes[0]
     retour = simulation.demandes[1]["messages"][-1]
     assert retour["role"] == "tool" and retour["tool_call_id"] == "appel_0"
     assert json.loads(retour["content"]) == RESULTAT
@@ -155,6 +156,62 @@ def test_description_projet_et_plusieurs_tours(client, simulation):
     assert resultat["statut"] == "ok"
     assert len(resultat["outils_appeles"]) == 2
     assert len(simulation.demandes) == 3
+
+
+def test_resultat_site_compact_sans_perte_des_preuves():
+    resultat = {"statut": "ok", "sources": [SOURCE], "analyse": {
+        "url_analysee": "https://exemple.fr", "resume": {"manquant": 1},
+        "verifications": [{"id": "mentions", "statut": "manquant", "preuve": PREUVE,
+            "reference": SOURCE["reference"], "description": "Description répétée " * 100,
+            "methode": "Méthode répétée " * 100}],
+    }}
+    original = copy.deepcopy(resultat)
+    compact = json.loads(application.resultat_pour_modele(resultat))
+    assert compact["sources"] == [SOURCE]
+    point = compact["analyse"]["verifications"][0]
+    assert point["preuve"] == PREUVE and point["statut"] == "manquant"
+    assert point["reference"] == SOURCE["reference"]
+    assert "description" not in point and "methode" not in point
+    assert resultat == original
+
+
+@pytest.mark.parametrize("resultat", [
+    {"statut": "erreur", "erreur": "Lecture impossible"},
+    {"statut": "ok", "sources": [], "textes": []},
+])
+def test_resultat_vide_ou_erreur_conserve(resultat):
+    assert json.loads(application.resultat_pour_modele(resultat)) == resultat
+
+
+@pytest.mark.parametrize("attente,reprise", [("1", True), ("61", False), ("invalide", False)])
+def test_quota_respecte_retry_after_borne(client, simulation, monkeypatch, attente, reprise):
+    attentes = []
+
+    async def attendre(delai):
+        attentes.append(delai)
+
+    monkeypatch.setattr(application.anyio, "sleep", attendre)
+    reponse = httpx.Response(429, headers={"retry-after": attente},
+                            request=httpx.Request("POST", "https://api.groq.com"))
+    erreur = groq.RateLimitError("quota simulé", response=reponse, body={})
+    simulation.reponses.insert(0, erreur)
+    resultat = client.post("/api/chat", json={"message": "Mon projet"}).json()
+    assert resultat["statut"] == ("ok" if reprise else "erreur")
+    assert attentes == ([1.0] if reprise else [])
+
+
+def test_quota_reprise_unique(client, simulation, monkeypatch):
+    async def attendre(delai):
+        pass
+
+    monkeypatch.setattr(application.anyio, "sleep", attendre)
+    reponse = httpx.Response(429, headers={"retry-after": "0"},
+                            request=httpx.Request("POST", "https://api.groq.com"))
+    erreur = groq.RateLimitError("quota simulé", response=reponse, body={})
+    simulation.reponses = [erreur, erreur]
+    resultat = client.post("/api/chat", json={"message": "Mon projet"}).json()
+    assert resultat["statut"] == "erreur"
+    assert len(simulation.demandes) == 2
 
 
 @pytest.mark.parametrize("changements", [
@@ -196,6 +253,8 @@ def test_exception_outil_est_presentee_sans_detail(client, simulation):
 
 
 @pytest.mark.parametrize("code, classe, attendu", [
+    (404, groq.NotFoundError, "Modèle Groq indisponible"),
+    (413, groq.APIStatusError, "Demande trop volumineuse"),
     (401, groq.AuthenticationError, "Clé Groq invalide"),
     (429, groq.RateLimitError, "Quota Groq atteint"),
     (400, groq.BadRequestError, "Groq a refusé"),
