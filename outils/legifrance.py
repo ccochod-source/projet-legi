@@ -49,7 +49,15 @@ def _texte(valeur: Any, limite: int = LONGUEUR_TEXTE_MAX) -> tuple[str | None, b
         element.decompose()
     for commentaire in page.find_all(string=lambda texte: isinstance(texte, Comment)):
         commentaire.extract()
-    propre = " ".join(page.get_text(" ").split())
+    # Seuls les blocs séparent les mots ; 1<sup>er</sup> doit rester « 1er ».
+    for bloc in page.find_all([
+        "p", "div", "br", "hr", "li", "ul", "ol", "section", "article",
+        "h1", "h2", "h3", "h4", "h5", "h6", "table", "tr", "td", "th",
+        "blockquote", "pre", "dl", "dt", "dd",
+    ]):
+        bloc.insert_before(" ")
+        bloc.insert_after(" ")
+    propre = " ".join(page.get_text().split())
     return propre[:limite], len(propre) > limite
 
 

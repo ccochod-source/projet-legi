@@ -306,6 +306,22 @@ def test_article_html_seul_tronque_et_instruction_reste_une_donnee(monkeypatch):
     assert "jamais des instructions" in resultat["avertissement"]
 
 
+@pytest.mark.parametrize("html,attendu", [
+    ("<p>Au 1<sup>er</sup> janvier.</p>", "Au 1er janvier."),
+    ("<p>respon<mark>sabilité</mark></p>", "responsabilité"),
+    ("<p>L.<b>123</b>-4 du code.</p>", "L.123-4 du code."),
+    ("<p>Première phrase.</p><p>Deuxième.<br>Troisième.</p>",
+     "Première phrase. Deuxième. Troisième."),
+    ("<table><tr><td>Début</td><td>Fin</td></tr></table>", "Début Fin"),
+])
+def test_nettoyage_preserve_mots_et_limites_des_blocs(monkeypatch, html, attendu):
+    reponse = copy.deepcopy(ARTICLE_SIMULE)
+    reponse["article"]["texte"] = html
+    installer_client(monkeypatch, reponse)
+    resultat = executer(legifrance.consulter_article(ARTICLE_ID))
+    assert resultat["article"]["texte"] == attendu
+
+
 def test_titres_sans_extraits_et_metadonnees_inconnues(monkeypatch):
     reponse = copy.deepcopy(RECHERCHE_SIMULEE)
     reponse["results"][0].pop("sections")
