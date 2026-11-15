@@ -63,6 +63,9 @@ def trouver_liens_legaux(soupe: BeautifulSoup, url_base: str, signatures: dict[s
 
     Le texte du lien (ou son title / aria-label) est prioritaire sur l'adresse.
     """
+    base = soupe.find("base", href=True)
+    if base:
+        url_base = urljoin(url_base, base["href"].strip())
     liens = []
     for balise in soupe.find_all("a", href=True):
         href = balise["href"].strip()
