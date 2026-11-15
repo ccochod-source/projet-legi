@@ -23,7 +23,7 @@ import config
 from erreurs import ErreurOutil
 
 USER_AGENT = (
-    "projet-legi/0.1 (analyse automatique de conformite ; projet etudiant ; "
+    "Mozilla/5.0 (compatible; projet-legi/0.1; analyse automatique ; projet etudiant ; "
     "+https://github.com/ccochod-source/projet-legi)"
 )
 TAILLE_MAX_OCTETS = 2_000_000
@@ -101,7 +101,7 @@ async def _telecharger(
         en_tetes = {
             "User-Agent": USER_AGENT,
             "Host": adresse.netloc.decode("ascii"),
-            "Accept": "text/html,application/xhtml+xml",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "fr-FR,fr;q=0.9",
         }
         extensions = {"sni_hostname": adresse.host} if adresse.scheme == "https" else {}
@@ -121,6 +121,11 @@ async def _telecharger(
                     raise ErreurOutil("Redirection invalide renvoyée par le site.")
                 adresse = valider_url(str(adresse.join(cible)))
                 continue
+            if reponse.status_code == 403:
+                raise ErreurOutil(
+                    f"Le site bloque la lecture automatisée (HTTP 403) pour {adresse}. "
+                    "Copiez-collez plutôt le texte des pages légales dans la discussion."
+                )
             if reponse.status_code >= 400:
                 raise ErreurOutil(
                     f"Le site a répondu avec le code HTTP {reponse.status_code} "

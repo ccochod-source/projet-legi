@@ -1,7 +1,7 @@
 {
   "version": 1,
   "verifie_le": "2026-11-15",
-  "note": "Identifiants LEGIARTI relevés le 15/11/2026 sur les fiches service-public.gouv.fr (F37351, F23455, F31228) et sur l'export LEGI de codes.droit.org. Le RGPD n'est pas sur Légifrance : lien EUR-Lex, legifrance_id vide.",
+  "note": "Identifiants LEGIARTI relevés le 15/11/2026 sur les fiches service-public.gouv.fr (F37351, F23455, F31228) et sur l'export LEGI de codes.droit.org. Lecture confirmée via l'API sandbox le 15/11/2026 : LCEN 1-1 LEGIARTI000049568614, loi 78-17 article 82 LEGIARTI000037813978, consommation L221-5 LEGIARTI000053310511 (état VIGUEUR reçu pour les trois). Le RGPD n'est pas sur Légifrance : lien EUR-Lex, legifrance_id vide.",
   "obligations": [
     {
       "id": "https",

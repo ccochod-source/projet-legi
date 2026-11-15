@@ -19,12 +19,11 @@ from bs4 import BeautifulSoup
 from clients.web import recuperer_page
 from erreurs import ErreurOutil, convertir_erreur
 from outils.entreprises import chercher_entreprises, siren_valide
-from regles.moteur import charger_regles, chercher_motif, evaluer_obligations
+from regles.moteur import LONGUEUR_TEXTE_LISIBLE, charger_regles, chercher_motif, evaluer_obligations
 
 TYPES_PAGES_LEGALES = ("mentions_legales", "confidentialite", "cookies", "cgv", "cgu")
 MAX_PAGES = 6  # page d'accueil + 5 pages légales au maximum
 MAX_SIREN_VERIFIES = 2
-LONGUEUR_TEXTE_LISIBLE = 300
 # Types de <script> exécutés par le navigateur ; tout autre type (ex. text/plain
 # utilisé par les CMP) bloque le script jusqu'au consentement.
 TYPES_SCRIPT_EXECUTES = ("", "text/javascript", "application/javascript", "module", "text/ecmascript", "application/ecmascript")
@@ -265,6 +264,24 @@ async def _analyser(url: str) -> dict[str, Any]:
     for page in pages.values():
         page.setdefault("texte", extraire_texte(page["contenu"]))
 
+    confidentialite = pages.get("confidentialite")
+    if confidentialite:
+        confidentialite["pertinence_confirmee"] = any(
+            chercher_motif(o["detection"].get("motifs", []), confidentialite["texte"])
+            for o in regles["obligations"] if o["id"].startswith("rgpd_")
+        )
+
+    for page in pages_legales.values():
+        liens_secondaires = trouver_liens_legaux(
+            BeautifulSoup(page["contenu"], "html.parser"), page["url"], signatures["liens"]
+        )
+        for type_page, adresse in liens_secondaires.items():
+            if type_page not in liens:
+                erreurs[type_page] = {
+                    "url": adresse,
+                    "erreur": "Lien trouvé sur une page secondaire, non récupéré dans cette analyse bornée.",
+                }
+
     traceurs, cmp = analyser_traceurs(accueil["contenu"], accueil.get("cookies_deposes", []), signatures)
     indices_vente = detecter_e_commerce(accueil["contenu"], signatures["e_commerce"])
     if "cgv" in liens:
@@ -279,7 +296,10 @@ async def _analyser(url: str) -> dict[str, Any]:
 
     contexte = {
         "url_finale": accueil["url"],
-        "pages": {t: {"url": p["url"], "texte": p["texte"]} for t, p in pages.items()},
+        "pages": {t: {
+            "url": p["url"], "texte": p["texte"],
+            "pertinence_confirmee": p.get("pertinence_confirmee", True),
+        } for t, p in pages.items()},
         "erreurs_pages": erreurs,
         "contenu_lisible": len(accueil["texte"]) >= LONGUEUR_TEXTE_LISIBLE,
         "e_commerce": bool(indices_vente),

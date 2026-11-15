@@ -119,7 +119,7 @@ def test_redirection_suivie_et_user_agent():
     assert "secret" not in json.dumps(page["cookies_deposes"])
     assert all(r.url.host == "93.184.216.34" for r in requetes)
     assert requetes[1].headers["Host"] == "www.exemple.fr"
-    assert requetes[0].headers["User-Agent"].startswith("projet-legi/")
+    assert "projet-legi/" in requetes[0].headers["User-Agent"]
 
 
 def test_taille_bornee(monkeypatch):
@@ -280,7 +280,8 @@ def test_analyse_complete(monkeypatch):
     assert points["hebergeur"]["statut"] == "conforme"
     assert points["ecommerce_mediateur"]["statut"] == "conforme"
     assert points["cookies_consentement"]["statut"] == "manquant"
-    assert points["rgpd_reclamation_cnil"]["statut"] == "manquant"
+    assert points["rgpd_reclamation_cnil"]["statut"] == "a_verifier"
+    assert "Texte trop court" in points["rgpd_reclamation_cnil"]["preuve"]
     assert points["cookies_consentement"]["reference"]["article"] == "82"
 
     texte = json.dumps(resultat, ensure_ascii=False)
@@ -309,7 +310,7 @@ def test_entreprise_cessee_donne_a_verifier(monkeypatch):
 def test_site_sans_pages_legales(monkeypatch):
     installer_faux_site(monkeypatch, accueil="<html><body><p>" + "Mon blog de cuisine. " * 30 + "</p></body></html>")
     points = par_id(asyncio.run(analyser_site("https://exemple.fr/")))
-    assert points["mentions_legales_page"]["statut"] == "manquant"
+    assert points["mentions_legales_page"]["statut"] == "a_verifier"
     assert points["ecommerce_cgv"]["statut"] == "a_verifier"
     assert points["mentions_siren"]["statut"] == "a_verifier"
 
@@ -330,6 +331,67 @@ def test_page_legale_en_erreur_signalee(monkeypatch):
     assert points["ecommerce_retractation"]["statut"] == "a_verifier"
     assert "non récupérée" in points["ecommerce_retractation"]["preuve"]
     assert points["ecommerce_retractation"]["url_preuve"] == "https://exemple.fr/cgv-absente"
+
+
+@pytest.mark.parametrize("texte,statut", [
+    ("", "a_verifier"),
+    ("Chargement en cours", "a_verifier"),
+    ("Information générale sur le site. " * 20, "a_verifier"),
+    ("Responsable du traitement", "conforme"),
+])
+def test_lisibilite_page_confidentialite(monkeypatch, texte, statut):
+    monkeypatch.setitem(globals(), "CONFIDENTIALITE", f"<p>{texte}</p>")
+    installer_faux_site(monkeypatch)
+    points = par_id(asyncio.run(analyser_site("https://exemple.fr/")))
+    assert points["rgpd_responsable"]["statut"] == statut
+
+
+def test_mention_absente_page_pertinente_lisible(monkeypatch):
+    monkeypatch.setitem(globals(), "CONFIDENTIALITE",
+        "<p>Responsable du traitement. " + "Information générale. " * 20 + "</p>")
+    installer_faux_site(monkeypatch)
+    points = par_id(asyncio.run(analyser_site("https://exemple.fr/")))
+    assert points["rgpd_responsable"]["statut"] == "conforme"
+    assert points["rgpd_finalites"]["statut"] == "manquant"
+
+
+def test_confidentialite_non_trouvee(monkeypatch):
+    installer_faux_site(monkeypatch, accueil=ACCUEIL.replace(
+        '<a href="/confidentialite">Politique de confidentialité</a>', ""
+    ))
+    points = par_id(asyncio.run(analyser_site("https://exemple.fr/")))
+    assert points["rgpd_responsable"]["statut"] == "a_verifier"
+
+
+def test_lien_secondaire_non_lu(monkeypatch):
+    monkeypatch.setitem(globals(), "CONFIDENTIALITE", CONFIDENTIALITE +
+        '<a href="/mentions-secondaires">Mentions légales</a>')
+    installer_faux_site(monkeypatch, accueil=ACCUEIL.replace(
+        '<a href="/mentions-legales">Mentions légales</a>', ""
+    ))
+    points = par_id(asyncio.run(analyser_site("https://exemple.fr/")))
+    assert points["mentions_legales_page"]["statut"] == "a_verifier"
+    assert "secondaire" in points["mentions_legales_page"]["preuve"]
+
+
+def test_lien_absent_aussi_des_autres_pages_lisibles(monkeypatch):
+    monkeypatch.setitem(globals(), "CONFIDENTIALITE", "<p>Information publique. </p>" * 30)
+    monkeypatch.setitem(globals(), "CGV", "<p>Information commerciale. </p>" * 30)
+    installer_faux_site(monkeypatch, accueil=ACCUEIL.replace(
+        '<a href="/mentions-legales">Mentions légales</a>', ""
+    ))
+    points = par_id(asyncio.run(analyser_site("https://exemple.fr/")))
+    assert points["mentions_legales_page"]["statut"] == "manquant"
+
+
+def test_blocage_lecture_automatisee():
+    def bloquer(requete):
+        assert "projet-legi" in requete.headers["User-Agent"]
+        assert "application/xhtml+xml" in requete.headers["Accept"]
+        return httpx.Response(403)
+
+    with pytest.raises(ErreurOutil, match="bloque la lecture automatisée.*403.*Copiez-collez"):
+        recuperer("https://exemple.fr", bloquer)
 
 
 @pytest.mark.parametrize("url", ["", "file:///etc/passwd", "http://localhost", "http://127.0.0.1"])

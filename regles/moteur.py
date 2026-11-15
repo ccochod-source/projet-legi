@@ -22,6 +22,7 @@ GRAVITES = {"information", "avertissement", "critique"}
 TYPES_DETECTION = {"https", "page", "mots_cles", "siren", "traceurs"}
 APPLICABILITES = {"toujours", "professionnel", "e_commerce", "traceurs"}
 LONGUEUR_MAX_EXTRAIT = 80
+LONGUEUR_TEXTE_LISIBLE = 300
 
 MOTIF_EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 MOTIF_TELEPHONE = re.compile(r"(?:\+\d{1,3}[\s.\-]?|\b0)[1-9](?:[\s.\-]?\d{2}){4}\b")
@@ -137,6 +138,21 @@ def _absent(
             f"{explication} La page d'accueil contient très peu de texte "
             "(site probablement généré en JavaScript) : vérification manuelle nécessaire."
         )
+    if pages:
+        if pages[0] not in contexte["pages"]:
+            return "a_verifier", f"{explication} Page pertinente ({pages[0]}) non trouvée : lecture manuelle nécessaire."
+        principale = contexte["pages"][pages[0]]
+        if not principale.get("pertinence_confirmee", True):
+            return "a_verifier", (
+                f"{explication} Le lien mène à une page générale sans indice de politique "
+                "de confidentialité : la page pertinente n'est pas identifiée avec certitude."
+            )
+        courtes = [principale["url"]] if len(principale["texte"]) < LONGUEUR_TEXTE_LISIBLE else []
+        if courtes:
+            return "a_verifier", (
+                f"{explication} Texte trop court pour conclure (JavaScript possible) : "
+                + ", ".join(courtes) + "."
+            )
     return "manquant", explication
 
 
@@ -148,7 +164,15 @@ def _detecter_page(obligation, contexte):
     if type_page in contexte["erreurs_pages"]:
         erreur = contexte["erreurs_pages"][type_page]
         return "a_verifier", f"Lien trouvé mais page non récupérée : {erreur['erreur']}", erreur["url"]
-    statut, preuve = _absent(obligation, contexte, "Aucun lien vers cette page trouvé sur la page d'accueil.")
+    autres = [p for t, p in contexte["pages"].items() if t != "accueil"]
+    if not autres or contexte["erreurs_pages"] or any(
+        len(p["texte"]) < LONGUEUR_TEXTE_LISIBLE for p in autres
+    ):
+        return "a_verifier", (
+            "Aucun lien trouvé sur l'accueil ; les autres pages ne sont pas suffisamment "
+            "lues pour conclure (JavaScript possible)."
+        ), contexte["url_finale"]
+    statut, preuve = _absent(obligation, contexte, "Aucun lien vers cette page trouvé dans les pages lues.")
     return statut, preuve, contexte["url_finale"]
 
 
