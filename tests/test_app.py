@@ -121,6 +121,24 @@ def test_page_et_configuration_sans_cle(client, monkeypatch):
     assert "Clé Groq absente" in resultat["erreur"]
 
 
+def test_schema_et_pdf_sous_csp_stricte(client):
+    reponse = client.get("/schema")
+    assert reponse.status_code == 200
+    assert reponse.headers["content-security-policy"] == client.get("/").headers["content-security-policy"]
+    assert "style-src 'self'" in reponse.headers["content-security-policy"]
+    assert "<style" not in reponse.text
+    assert "style=" not in reponse.text
+    assert "<script" not in reponse.text
+    assert 'href="/static/schema.css"' in reponse.text
+    assert 'href="/static/schema_mcp.pdf"' in reponse.text
+    assert client.get("/static/schema.css").status_code == 200
+    pdf = client.get("/static/schema_mcp.pdf")
+    assert pdf.status_code == 200
+    assert pdf.headers["content-type"] == "application/pdf"
+    assert pdf.content.startswith(b"%PDF-")
+    assert 'href="/schema"' in client.get("/").text
+
+
 @pytest.mark.parametrize("message", ["", "  ", "ab", "a" * 6001])
 def test_demande_invalide(client, message):
     assert client.post("/api/chat", json={"message": message}).status_code == 422
