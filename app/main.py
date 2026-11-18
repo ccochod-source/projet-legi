@@ -114,6 +114,12 @@ async def schema() -> FileResponse:
     return FileResponse(RACINE / "app/static/schema.html")
 
 
+@app.get("/slides", response_class=FileResponse)
+async def slides() -> FileResponse:
+    """Sert la présentation du schéma MCP."""
+    return FileResponse(RACINE / "app/static/slides.html")
+
+
 def cle_disponible() -> bool:
     """Ignore la valeur d'exemple de la configuration."""
     return bool(config.GROQ_API_KEY.strip()) and config.GROQ_API_KEY.strip() != "votre_cle"
