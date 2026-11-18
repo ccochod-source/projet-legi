@@ -140,6 +140,24 @@ def test_schema_et_pdf_sous_csp_stricte(client):
     assert 'href="/schema"' in client.get("/").text
 
 
+def test_slides_et_ressources_sous_csp_stricte(client):
+    reponse = client.get("/slides")
+    assert reponse.status_code == 200
+    assert reponse.headers["content-security-policy"] == client.get("/").headers["content-security-policy"]
+    assert "<style" not in reponse.text
+    assert "style=" not in reponse.text
+    assert 'src="/static/slides.js" defer' in reponse.text
+    assert 'href="/static/slides.css"' in reponse.text
+    assert 'href="/static/slides_mcp.pdf"' in reponse.text
+    assert client.get("/static/slides.js").status_code == 200
+    assert client.get("/static/slides.css").status_code == 200
+    pdf = client.get("/static/slides_mcp.pdf")
+    assert pdf.status_code == 200
+    assert pdf.headers["content-type"] == "application/pdf"
+    assert pdf.content.startswith(b"%PDF-")
+    assert 'href="/slides"' in client.get("/schema").text
+
+
 @pytest.mark.parametrize("message", ["", "  ", "ab", "a" * 6001])
 def test_demande_invalide(client, message):
     assert client.post("/api/chat", json={"message": message}).status_code == 422
