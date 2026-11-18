@@ -130,6 +130,7 @@ def test_schema_et_pdf_sous_csp_stricte(client):
     assert "style=" not in reponse.text
     assert "<script" not in reponse.text
     assert 'href="/static/schema.css"' in reponse.text
+    assert 'name="viewport" content="width=device-width, initial-scale=1"' in reponse.text
     assert 'href="/static/schema_mcp.pdf"' in reponse.text
     assert client.get("/static/schema.css").status_code == 200
     pdf = client.get("/static/schema_mcp.pdf")
