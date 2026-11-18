@@ -1,4 +1,4 @@
-"""Génère la synthèse de présentation du poster MCP et des règles du projet."""
+"""Génère la présentation interactive, synthèse du poster MCP."""
 
 import json
 from collections import Counter
@@ -26,8 +26,8 @@ def icone(nom):
     return '<svg class="icone" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' + icones[nom] + "</svg>"
 
 
-def tuile(titre, texte, symbole):
-    return f'<div class="tuile">{icone(symbole)}<h2>{titre}</h2><p>{texte}</p></div>'
+def nombre(valeur):
+    return f'<span class="compte" data-final="{valeur}" aria-hidden="true">{valeur}</span><span class="impression">{valeur}</span>'
 
 
 def ajouter(rubrique, titre, contenu, classe="", sombre=False):
@@ -41,22 +41,54 @@ def ajouter(rubrique, titre, contenu, classe="", sombre=False):
     )
 
 
-ajouter("01 / INTRODUCTION", 'Le droit.<br>Des sources.<br><em>Pas des suppositions.</em>', '<p class="signature">Projet Légi — comprendre le rôle du MCP.</p>', "couverture", sombre=True)
-ajouter("02 / LE PROBLÈME", 'Une URL.<br>Que faut-il vérifier ?', '<div class="trois mots"><p>Identifier<br><span>l’éditeur</span></p><p>Repérer<br><span>les obligations</span></p><p>Retrouver<br><span>les sources</span></p></div>')
-ajouter("03 / LE PRINCIPE", 'L’IA choisit.<br><em>Le code vérifie.</em>', '<p class="signature">Les faits viennent des outils. Chaque affirmation doit être sourcée.</p>', "manifeste", sombre=True)
-ajouter("04 / ARCHITECTURE", 'Quatre blocs.<br>Des rôles clairs.', '<div class="groq">Groq <span>propose les appels à l’application</span></div><div class="chaine"><div>Navigateur</div><span>→</span><div>App</div><span>→</span><div>MCP</div><span>→</span><div>API officielles</div></div><p class="note">MCP lit aussi le site public analysé.</p>', "architecture")
-ajouter("05 / LE PARCOURS", 'De la question<br>aux preuves.', '<ol class="etapes"><li><b>01</b>Question</li><li><b>02</b>Choix d’outils</li><li><b>03</b>Lecture réelle</li><li><b>04</b>Rapport sourcé</li></ol>', sombre=True)
-ajouter("06 / LA BOÎTE À OUTILS", 'Quatre outils.<br>Pas de magie.', '<div class="deux outils">' + tuile("rechercher_textes_loi", "Repérer un texte officiel.", "recherche") + tuile("consulter_article", "Lire un article précis.", "article") + tuile("verifier_entreprise", "Retrouver une identité publique.", "entreprise") + tuile("analyser_site", "Observer les pages et appliquer les règles.", "site") + '</div>')
-ajouter("07 / ZOOM SUR LE SITE", 'Lire. Détecter.<br><em>Documenter.</em>', '<div class="zoom"><div><strong>6</strong><span>pages maximum</span></div><ul><li>HTML réellement reçu</li><li>Liens légaux suivis</li><li>Preuves et sources conservées</li></ul></div>', sombre=True)
+ajouter("01 / LE POINT DE DÉPART", '<span>Le droit.</span><span>Des sources.</span><em>Pas des suppositions.</em>', '<p class="signature">Projet Légi — repérer, sourcer, vérifier.</p>', "couverture", sombre=True)
+blocs = [
+    ("Navigateur", "Une URL, une entreprise ou une question juridique."),
+    ("App", "L’application contrôle les appels et construit le rapport."),
+    ("MCP", "Quatre outils, un protocole. Le serveur lit les sources et applique les règles."),
+    ("API officielles", "Légifrance, Recherche d’entreprises. MCP lit aussi le site public analysé."),
+]
+flux = '<div class="flux"><svg viewBox="0 0 1000 180" aria-hidden="true"><path class="liaison" d="M95 140H905M365 30V140"/><path class="paquets" d="M95 140H905M365 30V140"/></svg>'
+flux += '<button class="bloc groq" data-explication="Groq propose les outils ; les faits viennent du MCP." aria-controls="explication-flux">Groq <span>propose les appels</span></button>'
+for index, (titre, detail) in enumerate(blocs):
+    flux += f'<button class="bloc bloc-{index}" data-explication="{escape(detail, quote=True)}" aria-controls="explication-flux">{titre}</button>'
+flux += '</div><p id="explication-flux" class="explication" aria-live="polite">Survolez ou sélectionnez un bloc pour découvrir son rôle.</p><p class="impression">Sources : Légifrance, Recherche d’entreprises et site public analysé.</p>'
+ajouter("02 / LE PRINCIPE", 'L’IA choisit.<br><em>Le code vérifie.</em>', flux, "architecture")
+parcours = '<ol class="etapes"><li><b>01</b>Question</li><li><b>02</b>Choix d’outils</li><li><b>03</b>Lecture réelle</li><li><b>04</b>Rapport sourcé</li></ol><div class="quatre outils">'
+for titre, sous_titre, detail, symbole in [
+    ("rechercher_textes_loi", "Repérer", "Codes ou lois : titre, référence et extrait officiel.", "recherche"),
+    ("consulter_article", "Lire", "Un article précis, avec son texte et sa version.", "article"),
+    ("verifier_entreprise", "Identifier", "Identité publique par nom ou SIREN, sans dirigeants.", "entreprise"),
+    ("analyser_site", "Observer", "HTML initial et liens légaux ; six pages maximum.", "site"),
+]:
+    parcours += f'<article class="outil"><button type="button" aria-expanded="false" aria-controls="detail-{titre}">{icone(symbole)}<span>{titre}</span><small>{sous_titre} <span aria-hidden="true">+</span></small></button><p class="detail" id="detail-{titre}">{detail}</p></article>'
+parcours += '</div><p class="aide">Sélectionnez un outil pour en savoir plus.</p>'
+ajouter("03 / LE PARCOURS", 'Une question.<br>Quatre outils.', parcours, "parcours", sombre=True)
 ordre = ["Mentions légales", "Données personnelles", "Cookies et traceurs", "Commerce électronique", "Sécurité"]
-ajouter("08 / LE PÉRIMÈTRE", f'<em>{len(obligations)}</em> obligations.<br>Cinq thèmes.', '<div class="themes">' + "".join(f'<div><strong>{themes[theme]}</strong><span>{escape(theme)}</span></div>' for theme in ordre) + '</div>')
-ajouter("09 / LES STATUTS", 'Nuancer.<br>Toujours.', '<div class="deux statuts"><div class="ok"><h2>Conforme</h2><p>Élément détecté.</p></div><div class="ko"><h2>Manquant</h2><p>Absent des pages lues.</p></div><div class="av"><h2>À vérifier</h2><p>Preuve insuffisante.</p></div><div class="na"><h2>Non applicable</h2><p>Contexte non établi.</p></div></div>', sombre=True)
-ajouter("10 / L’INDICE", 'Un indice.<br>Pas un verdict.', '<div class="score"><div class="jauge"><svg viewBox="0 0 240 240" aria-label="92 sur 100"><circle class="piste" cx="120" cy="120" r="100"/><circle class="valeur" cx="120" cy="120" r="100" pathLength="100" stroke-dasharray="92 100"/></svg><strong>92<span>/100</span></strong></div><div><p class="formule">100 × points obtenus<br>÷ points possibles</p><p class="note">Service-public.fr · exemple observé</p><p class="note">Non applicables exclus · critique 3 · avertissement 2 · info 1</p></div></div>', "indice")
-ajouter("11 / LES GARDE-FOUS", 'La confiance<br>se construit.', '<div class="quatre">' + tuile("Sources vérifiées", "Pas de référence inventée.", "source") + tuile("Accès publics", "Destinations privées bloquées.", "bouclier") + tuile("Données limitées", "E-mails et téléphones masqués.", "donnees") + tuile("Règles fixes", "Statuts non réécrits par l’IA.", "regles") + '</div>', sombre=True)
-ajouter("12 / DEUX MODES", 'Même MCP.<br>Deux terrains.', '<div class="deux modes"><div><span class="sur-titre">SUR VOTRE MACHINE</span><h2>Local</h2><p>MCP en stdio<br>Clés dans .env</p></div><div><span class="sur-titre">SUR VERCEL</span><h2>En ligne</h2><p>MCP en mémoire<br>Code d’accès requis</p></div></div>')
-ajouter("13 / LES ESSAIS", 'Des résultats.<br><em>Des limites aussi.</em>', '<div class="trois resultats"><div><strong>281</strong><span>tests automatisés</span></div><div><strong>7/7</strong><span>injections déjouées</span></div><div><strong>92 <i>/</i> 7</strong><span>indices observés /100</span></div></div><p class="note">API simulées · essais d’injection · service-public.fr / example.com</p>', sombre=True)
-ajouter("14 / LES LIMITES", 'Savoir ce que<br>l’on ne sait pas.', '<ol class="limites"><li>Pas un avis juridique</li><li>HTML initial, sans JavaScript</li><li>Six pages maximum</li><li>Règles et mots-clés imparfaits</li><li>Certains sites bloquent la lecture</li><li>Quotas Groq et délais bornés</li></ol>')
-ajouter("15 / À RETENIR", 'Mieux repérer.<br><em>Vérifier ensemble.</em>', '<p class="signature">Un outil préparatoire, jamais une certification.</p><div class="liens"><a href="https://github.com/ccochod-source/projet-legi">github.com/ccochod-source/projet-legi</a><a href="https://projet-legi.vercel.app">projet-legi.vercel.app</a></div>', "conclusion", sombre=True)
+analyse = '<div class="themes">' + "".join(f'<div><strong aria-label="{themes[theme]}">{nombre(themes[theme])}</strong><span>{escape(theme)}</span></div>' for theme in ordre) + '</div><div class="chips" aria-label="Statuts">'
+for statut, classe, detail in [
+    ("Conforme", "ok", "Élément détecté, avec une preuve. Ce n’est pas une validation juridique."),
+    ("Manquant", "ko", "Élément non trouvé dans les pages réellement lues."),
+    ("À vérifier", "av", "Page illisible, absente ou preuve insuffisante : contrôle manuel nécessaire."),
+    ("Non applicable", "na", "Contexte non établi, par exemple aucun indice de vente : exclu du score."),
+]:
+    analyse += f'<button type="button" class="chip {classe}" data-sens="{escape(detail, quote=True)}" aria-pressed="false" aria-controls="sens-statut">{statut}</button>'
+analyse += '</div><p id="sens-statut" class="explication" aria-live="polite">Chaque point reçoit un statut et une preuve.</p>'
+ajouter("04 / ANALYSER UN SITE", f'<em>{len(obligations)}</em> obligations.<br>Cinq thèmes.', analyse, "analyse")
+score = '<div class="score"><div class="jauge score-92"><svg viewBox="0 0 240 240" aria-hidden="true"><circle class="piste" cx="120" cy="120" r="100"/><circle class="valeur" cx="120" cy="120" r="100" pathLength="100"/></svg><strong aria-label="92 sur 100"><span id="nombre-score" class="compte" data-final="92" aria-hidden="true">92</span><span class="impression">92</span><small>/100</small></strong></div><div><p class="formule">100 × points obtenus<br>÷ points possibles</p><p class="note">Critique 3 · avertissement 2 · info 1</p><p class="note">Non applicables exclus</p><div class="choix" aria-label="Exemple observé"><button type="button" data-score="92" aria-pressed="true">service-public.fr · 92</button><button type="button" data-score="7" aria-pressed="false">example.com · 7</button></div><p class="aide">Exemples observés, pas des certifications.</p></div></div>'
+ajouter("05 / L’INDICE", 'Un indice.<br><em>Pas un verdict.</em>', score, "indice", sombre=True)
+confiance = '<div class="quatre protections">'
+for titre, detail, symbole in [
+    ("Sources vérifiées", "Pas de référence inventée.", "source"),
+    ("Accès publics", "Destinations privées bloquées.", "bouclier"),
+    ("Données limitées", "E-mails et téléphones masqués.", "donnees"),
+    ("Règles fixes", "Statuts non réécrits par l’IA.", "regles"),
+]:
+    confiance += f'<div>{icone(symbole)}<h2>{titre}</h2><p>{detail}</p></div>'
+confiance += '</div><div class="resultats"><div><strong aria-label="281">' + nombre(281) + '</strong><span>tests automatisés · API simulées</span></div><div><strong aria-label="7 sur 7">' + nombre(7) + '<small>/7</small></strong><span>injections déjouées lors des essais</span></div></div><div class="modes"><div class="choix" aria-label="Mode MCP"><button type="button" data-mode="local" aria-pressed="true">Local</button><button type="button" data-mode="ligne" aria-pressed="false">En ligne</button></div><p id="mode-detail" aria-live="polite">MCP en stdio · clés dans .env</p><p class="impression">Local : MCP en stdio · clés dans .env<br>En ligne : MCP en mémoire · code d’accès requis</p></div>'
+ajouter("06 / LA CONFIANCE", 'Des garde-fous.<br>Des essais.', confiance, "confiance")
+limites = '<ol class="limites"><li>Pas un avis juridique</li><li>HTML initial, sans JavaScript</li><li>Six pages maximum</li><li>Règles et mots-clés imparfaits</li><li>Certains sites bloquent la lecture</li><li>Quotas Groq et délais bornés</li></ol><div class="liens"><a href="https://github.com/ccochod-source/projet-legi">github.com/ccochod-source/projet-legi</a><a href="https://projet-legi.vercel.app">projet-legi.vercel.app</a></div>'
+ajouter("07 / LIMITES & PERSPECTIVE", 'Mieux repérer.<br><em>Vérifier ensemble.</em>', limites, "conclusion", sombre=True)
 
 document = '''<!doctype html>
 <html lang="fr"><head><meta charset="utf-8">
@@ -65,7 +97,7 @@ document = '''<!doctype html>
 <link rel="stylesheet" href="/static/slides.css">
 <script src="/static/slides.js" defer></script></head>
 <body class="presentation"><main class="cadre" aria-label="Présentation MCP">
-<progress id="progression" max="15" value="1" aria-label="Progression de la présentation"></progress>'''
+<progress id="progression" max="7" value="1" aria-label="Progression de la présentation"></progress>'''
 document += "\n".join(slides)
 document += '''</main><nav class="commandes" aria-label="Navigation des diapositives">
 <button id="precedent" type="button" aria-label="Diapositive précédente">←</button>

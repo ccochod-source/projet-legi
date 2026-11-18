@@ -149,6 +149,9 @@ def test_slides_et_ressources_sous_csp_stricte(client):
     assert 'src="/static/slides.js" defer' in reponse.text
     assert 'href="/static/slides.css"' in reponse.text
     assert 'href="/static/slides_mcp.pdf"' in reponse.text
+    assert reponse.text.count('class="slide ') == 7
+    assert 'data-score="7"' in reponse.text
+    assert 'id="sens-statut"' in reponse.text
     assert client.get("/static/slides.js").status_code == 200
     assert client.get("/static/slides.css").status_code == 200
     pdf = client.get("/static/slides_mcp.pdf")
