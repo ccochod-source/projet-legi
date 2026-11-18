@@ -25,17 +25,45 @@ button,a{-webkit-tap-highlight-color:transparent}
 .active.couverture h1>:nth-child(3){animation-delay:.4s}
 .quatre{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.5cqw}
 .icone{width:2.5cqw;height:2.5cqw;color:var(--bleu);margin-bottom:.6cqw}
-.flux{height:18cqw;position:relative}
-.flux>svg{position:absolute;top:0;width:100%;height:auto;overflow:visible;fill:none;stroke-width:2}
-.liaison{stroke:var(--bord)}
-.paquets{stroke:var(--bleu);stroke-width:3;stroke-dasharray:5 32}
+.architecture h1{font-size:4.2cqw}
+.flux{display:grid;grid-template-columns:12fr 5fr 19fr 7fr 26fr 4fr 19fr;align-items:center;min-height:0}
+.fleche{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--secondaire)}
+.fleche svg{width:100%;height:1.6cqw;overflow:visible;fill:none;stroke-width:2}
+.fleche small{position:absolute;top:calc(50% + 1.2cqw);font-size:.85cqw;line-height:1.2;text-align:center;white-space:nowrap}
+.f-groq svg,.f-supabase svg{width:3cqw;height:1.4cqw}
+.f-sources svg{height:26cqw}
+.liaison{stroke:var(--bord);vector-effect:non-scaling-stroke}
+.paquets{stroke:var(--bleu);stroke-width:3;stroke-dasharray:5 32;vector-effect:non-scaling-stroke}
 .active .paquets{animation:circuler 2s linear infinite}
-.bloc{position:absolute;top:10cqw;width:19%;height:5.2cqw;border:1px solid var(--bord);border-radius:.7cqw;background:var(--papier);color:var(--nuit);font:inherit;font-size:1.8cqw;font-weight:600;cursor:pointer;transition:border-color .2s,transform .2s}
-.bloc:hover,.bloc:focus-visible{border-color:var(--bleu);transform:translateY(-.3cqw)}
-.bloc-0{left:0}.bloc-1{left:27%}.bloc-2{left:54%}.bloc-3{left:81%}
-.bloc.groq{left:27%;top:0;height:4cqw;color:var(--bleu);border-color:var(--bleu);font-size:1.8cqw}
-.groq span{display:block;font-weight:400;font-size:.85cqw;color:var(--secondaire)}
+.bloc{display:flex;flex-direction:column;justify-content:center;gap:.25cqw;width:100%;padding:.8cqw 1cqw;border:1px solid var(--bord);border-radius:.7cqw;background:#fff;color:var(--nuit);font:inherit;text-align:center;cursor:pointer;transition:border-color .2s,transform .2s,box-shadow .2s}
+.bloc:hover,.bloc:focus-visible{border-color:var(--bleu);transform:translateY(-.2cqw);box-shadow:0 .4cqw 1.2cqw #10131c1f}
+.bloc b{font-size:1.4cqw;font-weight:650;letter-spacing:-.02em}
+.bloc span{font-size:.95cqw;color:#5d6575}
+.bloc i{display:block;font-style:normal;font-size:.95cqw;line-height:1.35}
+.navigateur,.source{background:var(--nuit);color:var(--papier);border-color:var(--nuit)}
+.navigateur span,.source span{color:#c6cbd6}
+.navigateur{min-height:8cqw}
+.pile{display:flex;flex-direction:column;align-items:center}
+.groq{background:#f8d27a;border-color:#f8d27a}
+.app{background:var(--bleu);border-color:var(--bleu);color:#fff;gap:.4cqw;padding:1cqw}
+.app span{color:#dfe7ff}
+.app b{font-size:1.45cqw}
+.supabase{background:#dff3e6;border-color:#dff3e6}
+.mcp{display:flex;flex-direction:column;gap:.7cqw;padding:1cqw;border:2px solid var(--nuit);border-radius:1cqw;background:#fff}
+.mcp .entete{border:0;padding:.2cqw;background:transparent}
+.mcp .entete b{font-size:1.45cqw}
+.outils-mcp{display:grid;grid-template-columns:1fr 1fr;gap:.7cqw}
+.outil-mcp{background:var(--tuile);border-color:var(--tuile);padding:.7cqw .5cqw}
+.outil-mcp b{font-size:1.05cqw;letter-spacing:0;white-space:nowrap}
+.coeur{background:var(--bleu);border-color:var(--bleu);color:#fff}
+.coeur span{color:#dfe7ff}
+.moteur{background:#fcefd2;border-color:#fcefd2;padding:.7cqw}
+.moteur b{font-size:1.1cqw;letter-spacing:0}
+.sources{display:flex;flex-direction:column;gap:1.4cqw}
+.source b{font-size:1.25cqw}
+.source i{color:#c6cbd6}
 .slide .explication{font-size:1.65cqw;min-height:4.4cqw;max-width:85cqw}
+.architecture .explication{font-size:1.35cqw;min-height:3.6cqw;max-width:none;border-left:.25cqw solid var(--bleu);padding-left:1cqw}
 .etapes{padding:0;margin:0;list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:2cqw}
 .etapes li{font-size:1.7cqw;border-top:1px solid var(--bord);padding-top:.6cqw}
 .etapes b{display:inline-block;font-size:2.5cqw;font-weight:400;color:var(--bleu);margin-right:1cqw}

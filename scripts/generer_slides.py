@@ -41,19 +41,67 @@ def ajouter(rubrique, titre, contenu, classe="", sombre=False):
     )
 
 
+def bloc(classe, titre, sous_titre, detail, extra=""):
+    return (
+        f'<button type="button" class="bloc {classe}" data-explication="{escape(detail, quote=True)}" aria-controls="explication-flux">'
+        f"<b>{titre}</b><span>{sous_titre}</span>{extra}</button>"
+    )
+
+
+def fleche(classe, chemins, etiquette="", vue="0 0 40 20"):
+    texte = f"<small>{etiquette}</small>" if etiquette else ""
+    return (
+        f'<div class="fleche {classe}"><svg viewBox="{vue}" preserveAspectRatio="none" aria-hidden="true">'
+        f'<path class="liaison" d="{chemins}"/><path class="paquets" d="{chemins}"/></svg>{texte}</div>'
+    )
+
+
 ajouter("01 / LE POINT DE DÉPART", '<span>Le droit.</span><span>Des sources.</span><em>Pas des suppositions.</em>', '<p class="signature">Projet Légi — repérer, sourcer, vérifier.</p>', "couverture", sombre=True)
-blocs = [
-    ("Navigateur", "Une URL, une entreprise ou une question juridique."),
-    ("App", "L’application contrôle les appels et construit le rapport."),
-    ("MCP", "Quatre outils, un protocole. Le serveur lit les sources et applique les règles."),
-    ("API officielles", "Légifrance, Recherche d’entreprises. MCP lit aussi le site public analysé."),
-]
-flux = '<div class="flux"><svg viewBox="0 0 1000 180" aria-hidden="true"><path class="liaison" d="M95 140H905M365 30V140"/><path class="paquets" d="M95 140H905M365 30V140"/></svg>'
-flux += '<button class="bloc groq" data-explication="Groq propose les outils ; les faits viennent du MCP." aria-controls="explication-flux">Groq <span>propose les appels</span></button>'
-for index, (titre, detail) in enumerate(blocs):
-    flux += f'<button class="bloc bloc-{index}" data-explication="{escape(detail, quote=True)}" aria-controls="explication-flux">{titre}</button>'
-flux += '</div><p id="explication-flux" class="explication" aria-live="polite">Survolez ou sélectionnez un bloc pour découvrir son rôle.</p><p class="impression">Sources : Légifrance, Recherche d’entreprises et site public analysé.</p>'
-ajouter("02 / LE PRINCIPE", 'L’IA choisit.<br><em>Le code vérifie.</em>', flux, "architecture")
+flux = '<div class="flux">'
+flux += bloc("navigateur", "Navigateur", "page web + code d’accès",
+             "Navigateur — l’utilisateur pose une question, donne une URL ou une entreprise. En ligne, un code d’accès protège le service.")
+flux += fleche("f-question", "M0 10H40", "question")
+flux += '<div class="pile">'
+flux += bloc("groq", "IA Groq", "gpt-oss-120b · secours 20b",
+             "IA Groq — choisit l’outil à appeler puis rédige la réponse. Elle ne voit aucune clé et ne touche jamais directement aux API.")
+flux += fleche("f-groq", "M14 0V20M26 20V0", vue="0 0 40 20")
+flux += bloc("app", "Application FastAPI", "app/main.py — orchestration",
+             "Application FastAPI — borne la discussion : 3 tours, 6 appels d’outils, 50 s en ligne et 180 s en local. rapport.py valide les sources citées, tableau_de_bord.py calcule le score.",
+             '<i>3 tours · 6 appels d’outils max</i><i>rapport.py : valide les sources</i><i>tableau_de_bord.py : score</i><i>50 s en ligne · 180 s en local</i>')
+flux += fleche("f-supabase", "M20 0V20", vue="0 0 40 20")
+flux += bloc("supabase", "Supabase", "historique (optionnel)",
+             "Supabase — conserve l’historique des analyses. Optionnel : l’application fonctionne sans.")
+flux += "</div>"
+flux += fleche("f-session", "M0 10H40", "session MCP<br>stdio / mémoire")
+flux += '<div class="mcp">'
+flux += bloc("entete", "Serveur MCP — server.py", "FastMCP(&quot;projet-legi&quot;) · 4 outils",
+             "Serveur MCP — expose quatre outils par un protocole standard. Session en stdio en local, en mémoire en ligne. C’est lui qui lit les sources, jamais l’IA.")
+flux += '<div class="outils-mcp">'
+for classe, titre, sous_titre, detail in [
+    ("outil-mcp", "rechercher_textes_loi", "Légifrance", "rechercher_textes_loi — trouve codes et lois sur Légifrance : titre, référence et extrait officiel."),
+    ("outil-mcp", "consulter_article", "Légifrance", "consulter_article — lit un article précis de Légifrance, avec son texte et sa version en vigueur."),
+    ("outil-mcp", "verifier_entreprise", "registre", "verifier_entreprise — identité publique d’une entreprise par nom ou SIREN, sans données sur les dirigeants."),
+    ("outil-mcp coeur", "analyser_site", "cœur du projet", "analyser_site — lit la page d’accueil et les pages légales d’un site, puis applique les règles de conformité."),
+]:
+    flux += bloc(classe, titre, sous_titre, detail)
+flux += "</div>"
+flux += bloc("moteur", "regles/obligations.json + moteur.py", f"{len(obligations)} obligations → conforme / manquant / à vérifier",
+             f"Moteur de règles — {len(obligations)} obligations fixes, chacune avec un statut et une preuve. L’IA ne peut pas réécrire ces statuts.")
+flux += "</div>"
+flux += fleche("f-sources", "M0 50L40 15M0 50H40M0 50L40 85", vue="0 0 40 100")
+flux += '<div class="sources">'
+flux += bloc("source", "Légifrance — API PISTE", "OAuth2 client_credentials · Sandbox",
+             "Légifrance (API PISTE) — authentification OAuth2 client_credentials en sandbox. Le jeton est mis en cache et renouvelé 30 s avant expiration.",
+             "<i>jeton en cache, renouvelé 30 s avant</i>")
+flux += bloc("source", "Recherche d’entreprises", "recherche-entreprises.api.gouv.fr",
+             "Recherche d’entreprises — API publique de l’État, gratuite et sans clé.",
+             "<i>gratuite, sans clé</i>")
+flux += bloc("source", "Le site web analysé", "HTML initial · 6 pages max",
+             "Site analysé — HTML initial uniquement, 6 pages maximum. Protection anti-SSRF, 2 Mo par page, 5 redirections au plus.",
+             "<i>anti-SSRF · 2 Mo · 5 redirections</i>")
+flux += "</div></div>"
+flux += '<p id="explication-flux" class="explication" aria-live="polite">Survolez ou sélectionnez un bloc pour découvrir son rôle.</p>'
+ajouter("02 / LE PRINCIPE", "L’IA choisit. <em>Le code vérifie.</em>", flux, "architecture")
 parcours = '<ol class="etapes"><li><b>01</b>Question</li><li><b>02</b>Choix d’outils</li><li><b>03</b>Lecture réelle</li><li><b>04</b>Rapport sourcé</li></ol><div class="quatre outils">'
 for titre, sous_titre, detail, symbole in [
     ("rechercher_textes_loi", "Repérer", "Codes ou lois : titre, référence et extrait officiel.", "recherche"),
