@@ -9,4 +9,5 @@ scripts/
 .pytest_cache/
 *.zip
 *.pdf
+!app/static/schema_mcp.pdf
 *.log

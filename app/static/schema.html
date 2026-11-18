@@ -1,0 +1,131 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Projet Légi — Schéma du MCP</title>
+<link rel="stylesheet" href="/static/schema.css"></head><body><div class="wrap">
+<nav class="schema-navigation" aria-label="Document à télécharger"><a href="/static/schema_mcp.pdf" download>Télécharger le PDF</a></nav>
+<h1>Projet <span>Légi</span> — comment marche le MCP</h1>
+<p class="sub">On donne une URL, une entreprise (nom ou SIREN) ou une question juridique : l'outil renvoie un rapport point par point, sourcé sur des API officielles, avec un indice /100.</p>
+<div class="phrase">« L'IA ne fait que <b>choisir les outils et rédiger</b>. Les <b>faits</b> viennent d'API officielles via le MCP, chaque affirmation est rattachée à une <b>source vérifiée</b>, et en cas de doute l'outil répond <b>« à vérifier »</b> au lieu d'inventer. »</div>
+
+<h2><span class="n">1</span>Architecture : qui parle à qui</h2>
+<div class="card">
+<svg width="1660" height="430" viewBox="0 0 1660 430">
+<defs><marker id="a" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#14213d"/></marker>
+<marker id="b" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#3a6ff7"/></marker></defs>
+<!-- user -->
+<rect x="10" y="150" width="210" height="120" rx="16" fill="#14213d"/><text x="115" y="198" fill="#fff" font-size="22" text-anchor="middle" font-weight="bold">Navigateur</text><text x="115" y="226" fill="#cfd8ee" font-size="15" text-anchor="middle">page web</text><text x="115" y="248" fill="#cfd8ee" font-size="15" text-anchor="middle">+ code d'accès</text>
+<line x1="222" y1="210" x2="318" y2="210" stroke="#14213d" stroke-width="3" marker-end="url(#a)"/>
+<text x="270" y="198" font-size="13" text-anchor="middle">question</text>
+<!-- app -->
+<rect x="320" y="110" width="330" height="200" rx="16" fill="#3a6ff7"/><text x="485" y="148" fill="#fff" font-size="22" text-anchor="middle" font-weight="bold">Application FastAPI</text><text x="485" y="174" fill="#e1e9ff" font-size="15" text-anchor="middle">app/main.py — orchestration</text>
+<text x="485" y="206" fill="#fff" font-size="15" text-anchor="middle">• 3 tours, 6 appels d'outils max</text><text x="485" y="230" fill="#fff" font-size="15" text-anchor="middle">• app/rapport.py : valide sources</text><text x="485" y="254" fill="#fff" font-size="15" text-anchor="middle">• app/tableau_de_bord.py : score</text><text x="485" y="278" fill="#fff" font-size="15" text-anchor="middle">• 50 s max en ligne, 180 s en local</text>
+<!-- groq -->
+<rect x="360" y="10" width="250" height="72" rx="14" fill="#ffd166"/><text x="485" y="40" font-size="20" text-anchor="middle" font-weight="bold">IA Groq</text><text x="485" y="64" font-size="14" text-anchor="middle">gpt-oss-120b (secours 20b)</text>
+<line x1="455" y1="108" x2="455" y2="84" stroke="#14213d" stroke-width="3" marker-end="url(#a)"/><line x1="515" y1="84" x2="515" y2="108" stroke="#14213d" stroke-width="3" marker-end="url(#a)"/>
+<text x="625" y="40" font-size="13">choisit l'outil et rédige</text><text x="625" y="58" font-size="13">ne voit aucune clé</text>
+<!-- supabase -->
+<rect x="360" y="350" width="250" height="66" rx="14" fill="#d8f5e3"/><text x="485" y="378" font-size="18" text-anchor="middle" font-weight="bold">Supabase</text><text x="485" y="400" font-size="14" text-anchor="middle">historique (optionnel)</text>
+<line x1="485" y1="312" x2="485" y2="348" stroke="#14213d" stroke-width="3" marker-end="url(#a)"/>
+<!-- MCP -->
+<line x1="652" y1="210" x2="758" y2="210" stroke="#14213d" stroke-width="3" marker-end="url(#a)"/>
+<text x="705" y="196" font-size="13" text-anchor="middle">session MCP</text><text x="705" y="234" font-size="12" text-anchor="middle">stdio / mémoire</text>
+<rect x="760" y="70" width="420" height="300" rx="18" fill="#fff" stroke="#14213d" stroke-width="3"/>
+<text x="970" y="104" font-size="23" text-anchor="middle" font-weight="bold">Serveur MCP — server.py</text><text x="970" y="126" font-size="14" text-anchor="middle" fill="#4a5570">FastMCP("projet-legi") · 4 outils</text>
+<rect x="780" y="140" width="185" height="62" rx="10" fill="#eef1f8"/><text x="872" y="167" font-size="14.5" text-anchor="middle" font-weight="bold">rechercher_textes_loi</text><text x="872" y="188" font-size="13" text-anchor="middle">Légifrance</text>
+<rect x="975" y="140" width="185" height="62" rx="10" fill="#eef1f8"/><text x="1067" y="167" font-size="14.5" text-anchor="middle" font-weight="bold">consulter_article</text><text x="1067" y="188" font-size="13" text-anchor="middle">Légifrance</text>
+<rect x="780" y="212" width="185" height="62" rx="10" fill="#eef1f8"/><text x="872" y="239" font-size="14.5" text-anchor="middle" font-weight="bold">verifier_entreprise</text><text x="872" y="260" font-size="13" text-anchor="middle">registre</text>
+<rect x="975" y="212" width="185" height="62" rx="10" fill="#3a6ff7"/><text x="1067" y="239" font-size="14.5" text-anchor="middle" font-weight="bold" fill="#fff">analyser_site</text><text x="1067" y="260" font-size="13" text-anchor="middle" fill="#fff">cœur du projet</text>
+<rect x="780" y="284" width="380" height="60" rx="10" fill="#fff1d1"/><text x="970" y="310" font-size="14.5" text-anchor="middle" font-weight="bold">regles/obligations.json + moteur.py</text><text x="970" y="330" font-size="13" text-anchor="middle">21 obligations → conforme / manquant / à vérifier</text>
+<!-- APIs -->
+<line x1="1182" y1="130" x2="1308" y2="80" stroke="#3a6ff7" stroke-width="3" marker-end="url(#b)"/>
+<line x1="1182" y1="210" x2="1308" y2="210" stroke="#3a6ff7" stroke-width="3" marker-end="url(#b)"/>
+<line x1="1182" y1="290" x2="1308" y2="340" stroke="#3a6ff7" stroke-width="3" marker-end="url(#b)"/>
+<rect x="1310" y="30" width="340" height="100" rx="14" fill="#14213d"/><text x="1480" y="66" fill="#fff" font-size="19" text-anchor="middle" font-weight="bold">Légifrance — API PISTE</text><text x="1480" y="90" fill="#cfd8ee" font-size="14" text-anchor="middle">OAuth2 client_credentials · Sandbox</text><text x="1480" y="112" fill="#cfd8ee" font-size="14" text-anchor="middle">jeton en cache, renouvelé 30 s avant</text>
+<rect x="1310" y="160" width="340" height="100" rx="14" fill="#14213d"/><text x="1480" y="196" fill="#fff" font-size="19" text-anchor="middle" font-weight="bold">Recherche d'entreprises</text><text x="1480" y="220" fill="#cfd8ee" font-size="14" text-anchor="middle">recherche-entreprises.api.gouv.fr</text><text x="1480" y="242" fill="#cfd8ee" font-size="14" text-anchor="middle">gratuite, sans clé</text>
+<rect x="1310" y="290" width="340" height="100" rx="14" fill="#14213d"/><text x="1480" y="326" fill="#fff" font-size="19" text-anchor="middle" font-weight="bold">Le site web analysé</text><text x="1480" y="350" fill="#cfd8ee" font-size="14" text-anchor="middle">HTML initial, 6 pages max</text><text x="1480" y="372" fill="#cfd8ee" font-size="14" text-anchor="middle">anti-SSRF · 2 Mo · 5 redirections</text>
+</svg></div>
+
+<h2><span class="n">2</span>Déroulé d'une question</h2>
+<div class="schema-style-1 grid">
+<div class="card"><div class="t">① Question</div><span class="small">« Analyse le site https://exemple.fr »</span></div>
+<div class="card"><div class="t">② Session MCP</div><span class="small">L'app récupère la liste des 4 outils</span></div>
+<div class="card"><div class="t">③ Groq</div><span class="small">reçoit consigne système + question + outils</span></div>
+<div class="card"><div class="t">④ Choix</div><span class="small">« appelle <code>analyser_site(url)</code> »</span></div>
+<div class="card"><div class="t">⑤ Exécution</div><span class="small">Le MCP lit vraiment le site et applique les règles</span></div>
+<div class="card"><div class="t">⑥ Enchaînement</div><span class="small">SIREN trouvé, article de loi… (≤ 3 tours, 6 appels)</span></div>
+<div class="card"><div class="t">⑦ Validation</div><span class="small">Référence hors sources = rejetée ; statuts repris tels quels</span></div>
+<div class="card"><div class="t">⑧ Affichage</div><span class="small">Tableau de bord /100 + détail ; historique Supabase</span></div>
+</div>
+
+<h2><span class="n">3</span>Les 4 outils</h2>
+<div class="grid g4">
+<div class="card"><div class="t">rechercher_textes_loi</div><code>(question, fond="CODE_DATE", nb_resultats=5)</code><ul><li>Codes (<code>CODE_…</code>) ou lois hors codes (<code>LODA_…</code>), version en vigueur</li><li>Titre, n° d'article, état, dates, extrait, lien legifrance.gouv.fr</li><li>Extraits marqués « non complets »</li></ul></div>
+<div class="card"><div class="t">consulter_article</div><code>(article_id)</code><ul><li>Texte complet d'un article <code>LEGIARTI…</code></li><li>Refuse les textes entiers <code>LEGITEXT…</code></li><li>Tronqué au-delà de 6 000 caractères</li><li>L'IA cite le vrai texte, pas sa mémoire</li></ul></div>
+<div class="card"><div class="t">verifier_entreprise</div><code>(nom_ou_siren)</code><ul><li>5 entreprises max : SIREN, nom, active/cessée, création, activité, commune</li><li><b>Jamais</b> les dirigeants ni l'adresse complète</li><li>429 → 1 seul nouvel essai</li><li>Inscrite ≠ en règle</li></ul></div>
+<div class="schema-style-2 card"><div class="t">analyser_site</div><code>(url)</code><ul><li>Accueil + liens légaux (mentions, confidentialité, cookies, CGV, CGU) → 6 pages max</li><li>Détecte traceurs (Google, Meta, Hotjar…), bandeaux cookies (Didomi, Axeptio…), vente en ligne, activité pro</li><li>Vérifie jusqu'à 2 SIREN</li><li>Évalue les 21 obligations</li></ul></div>
+</div>
+<div class="schema-style-3 card">Format commun : <code>{"statut":"ok", …, "sources":[{titre, reference, url, date_recuperation}]}</code> ou <code>{"statut":"erreur","erreur":"message clair"}</code> — un outil ne fait jamais planter l'application.</div>
+
+<h2><span class="n">4</span>Les 21 obligations et leurs statuts</h2>
+<div class="schema-style-4 grid">
+<div class="card"><table>
+<tr><th>Thème</th><th>Points vérifiés</th><th>Base légale</th></tr>
+<tr><td><b>Mentions légales</b></td><td>Page <span class="tag crit">C</span> · Éditeur <span class="tag crit">C</span> · Siège <span class="tag avert">A</span> · Contact <span class="tag avert">A</span> · SIREN/RCS <span class="tag crit">C</span> · Dir. publication <span class="tag avert">A</span> · Hébergeur <span class="tag crit">C</span></td><td>LCEN art. 1-1<br><span class="small">LEGIARTI000049568614</span></td></tr>
+<tr><td><b>Données perso</b></td><td>Politique <span class="tag crit">C</span> · Responsable/DPO <span class="tag avert">A</span> · Finalités <span class="tag avert">A</span> · Base juridique <span class="tag avert">A</span> · Conservation <span class="tag avert">A</span> · Droits <span class="tag crit">C</span> · CNIL <span class="tag avert">A</span></td><td>RGPD</td></tr>
+<tr><td><b>Cookies</b></td><td>Information <span class="tag avert">A</span> · Consentement avant traceurs <span class="tag crit">C</span></td><td>Loi I&amp;L art. 82<br><span class="small">LEGIARTI000037813978</span></td></tr>
+<tr><td><b>E-commerce</b></td><td>TVA <span class="tag info">I</span> · CGV <span class="tag crit">C</span> · Rétractation 14 j <span class="tag crit">C</span> · Médiateur <span class="tag crit">C</span></td><td>C. conso L221-5<br><span class="small">LEGIARTI000053310511</span></td></tr>
+<tr><td><b>Sécurité</b></td><td>HTTPS <span class="tag avert">A</span></td><td>RGPD art. 32</td></tr>
+</table><div class="schema-style-5 small"><span class="tag crit">C</span> critique · <span class="tag avert">A</span> avertissement · <span class="tag info">I</span> information. Certaines obligations ne s'appliquent qu'aux professionnels, aux sites marchands ou aux sites avec traceurs.</div></div>
+<div class="card"><div class="t">Chaque point reçoit un statut + une preuve</div>
+<p><span class="tag ok">conforme</span> élément <b>détecté</b>, avec un extrait comme preuve</p>
+<p><span class="tag ko">manquant</span> rien trouvé <b>dans les pages réellement lues</b></p>
+<p><span class="tag av">à vérifier</span> page absente, illisible (&lt; 300 caractères), ambiguë, bloquée (403)…</p>
+<p><span class="tag na">non applicable</span> contexte non établi (ex. aucun indice de vente)</p>
+<p class="schema-style-6"><b>Jamais de verdict global</b> « légal / illégal ». Dans le doute : « à vérifier ».</p></div>
+</div>
+
+<h2><span class="n">5</span>Le tableau de bord : l'indice /100</h2>
+<div class="schema-style-7 grid">
+<div class="schema-style-8 card"><svg width="250" height="250" viewBox="0 0 250 250"><circle cx="125" cy="125" r="100" fill="none" stroke="#eef1f8" stroke-width="24"/><circle cx="125" cy="125" r="100" fill="none" stroke="#11743c" stroke-width="24" stroke-dasharray="578 628" transform="rotate(-90 125 125)" stroke-linecap="round"/><text x="125" y="135" font-size="58" text-anchor="middle" font-weight="bold">92</text><text x="125" y="168" font-size="18" text-anchor="middle" fill="#4a5570">/ 100</text></svg><div class="small">service-public.fr (example.com : 7/100)</div></div>
+<div class="card"><div class="t">Calcul déterministe — fait par le code, pas par l'IA</div>
+<p class="schema-style-9">score = 100 × <b>poids des points conformes</b> / <b>poids des points applicables</b></p>
+<ul><li>Poids : <span class="tag crit">critique ×3</span> <span class="tag avert">avertissement ×2</span> <span class="tag info">information ×1</span></li><li><span class="tag ok">conforme</span> rapporte son poids ; <span class="tag ko">manquant</span> et <span class="tag av">à vérifier</span> rapportent 0</li><li><span class="tag na">non applicable</span> est <b>retiré du calcul</b> (on ne pénalise pas un blog pour ses CGV)</li><li>Aucun point applicable → pas de score</li></ul></div>
+<div class="card"><div class="t">Ce qu'affiche la page</div><ul><li>Jauge colorée : rouge &lt; 50, orange 50–79, vert ≥ 80</li><li>Sous-score par thème (mentions, RGPD, cookies, e-commerce, sécurité)</li><li>Cartes <b>À corriger</b> (triées par gravité, avec action concrète), <b>À vérifier</b>, <b>Conformes</b>, <b>Non applicable</b></li><li>Tableau détaillé derrière « Voir le détail »</li><li>Mention : <i>« Indice des éléments détectés automatiquement, pas un verdict juridique »</i></li></ul></div>
+</div>
+
+<h2><span class="n">6</span>Les garde-fous</h2>
+<div class="grid g4">
+<div class="schema-style-10 card"><div class="t">Contre l'invention</div><ul><li>L'IA ne touche jamais aux API</li><li>Référence acceptée seulement si renvoyée par un outil</li><li>Statuts du site non modifiables par l'IA</li><li>Contenus = données, jamais instructions (anti-injection)</li><li>Température 0, 1 200 jetons max</li></ul></div>
+<div class="schema-style-11 card"><div class="t">Lecture des sites</div><ul><li>http/https vers adresses <b>publiques</b> seulement</li><li>Anti-SSRF : 127.0.0.1, 192.168.x, 169.254.169.254 refusés, à chaque redirection</li><li>2 Mo, 5 redirections, 20 s, HTML seulement</li><li>Aucun contournement anti-robots</li></ul></div>
+<div class="schema-style-12 card"><div class="t">Données personnelles</div><ul><li>Jamais de dirigeants ni d'adresse complète</li><li>Extraits de preuve ≤ 80 caractères</li><li>E-mails et téléphones masqués</li><li>Supabase : RLS, aucune règle publique</li></ul></div>
+<div class="schema-style-13 card"><div class="t">Robustesse</div><ul><li>Légifrance : jeton en cache, 1 nouvel essai après 401, erreurs 400/401/403/404/429/5xx traduites</li><li>Groq : quota atteint → modèle de secours 20b</li><li>Résultats compactés</li><li>Échec Supabase → rapport quand même rendu</li></ul></div>
+</div>
+
+<h2><span class="n">7</span>Deux modes, mêmes outils</h2>
+<div class="grid g3">
+<div class="card"><div class="t">En local (Mac / Linux)</div><ul><li><code>bash lancer.sh</code> : Python ≥ 3.10, <code>.venv</code>, dépendances, demande des clés sans les afficher</li><li>L'app lance <code>server.py</code> en <b>processus séparé</b>, dialogue en <b>stdio</b></li><li>Accessible seulement sur <code>127.0.0.1</code></li><li>Clés dans <code>.env</code> (permissions 600)</li></ul></div>
+<div class="card"><div class="t">En ligne (Vercel)</div><ul><li>Serverless = pas de 2ᵉ processus → transport MCP <b>en mémoire</b> (même protocole)</li><li><code>index.py</code> + <code>vercel.json</code> (60 s)</li><li>Redéploiement automatique à chaque fusion dans <code>main</code></li><li>Clés dans les variables chiffrées Vercel</li></ul></div>
+<div class="card"><div class="t">Sécurité en ligne</div><ul><li>En-tête <code>X-Code-Acces</code> obligatoire sur <code>/api/</code>, sinon 401</li><li>Comparaison <code>hmac.compare_digest</code></li><li>Code gardé pour l'onglet (<code>sessionStorage</code>)</li><li>CSP stricte, <code>no-store</code>, <code>nosniff</code>, refus des requêtes d'un autre site</li><li>Aucune clé sur GitHub ni dans le zip</li></ul></div>
+</div>
+
+<h2><span class="n">8</span>Tests et essais réels</h2>
+<div class="grid g2">
+<div class="card"><div class="t">279 tests automatiques pytest (API simulées)</div><span class="small">Erreurs d'API, jeton, quotas Groq, sources inventées, preuves absentes, SSRF, redirections, pages trop grandes, code d'accès, échec Supabase, calcul du score…</span></div>
+<div class="card"><div class="t">Essais réels</div><span class="small">Légifrance Sandbox, SIREN 500569405 (Decathlon), service-public.fr 92/100, example.com 7/100, sites bloquants (403), 7 attaques par injection de prompt : aucun faux verdict, aucune clé révélée, aucune adresse interne lue.</span></div>
+</div>
+
+<h2><span class="n">9</span>Les limites (à assumer)</h2>
+<div class="lim">
+<div><b>1. Pas un avocat</b>« conforme » = élément détecté, pas validé juridiquement</div>
+<div><b>2. HTML initial seulement</b>pas de JavaScript : traceurs dynamiques et vrai comportement du bandeau non testés</div>
+<div><b>3. 6 pages max</b>une info placée ailleurs n'est pas vue</div>
+<div><b>4. Mots-clés et règles</b>formulation inhabituelle → « à vérifier », rarement un faux résultat</div>
+<div><b>5. Périmètre limité</b>LCEN, RGPD, cookies, e-commerce de base ; pas RGAA, secteurs réglementés, droit étranger</div>
+<div><b>6. Sites anti-robots</b>Decathlon, Leboncoin : 403, pas d'analyse, pas de contournement</div>
+<div><b>7. Légifrance Sandbox</b>environnement de test ; recherche libre parfois mal classée</div>
+<div><b>8. Registre</b>inscrit ≠ en règle ; homonymes possibles</div>
+<div><b>9. Quotas Groq gratuits</b>≈ 8 000 jetons/min : parfois quelques secondes d'attente</div>
+<div><b>10. Questions libres</b>synthèse de l'IA, parfois incomplète ; seules références et statuts sont verrouillés</div>
+<div><b>11. En ligne</b>50 s max, un seul code partagé, historique selon la table Supabase</div>
+<div class="schema-style-14"><b>Injection de prompt</b>en cas de manipulation, l'outil refuse de travailler plutôt que d'affirmer</div>
+</div>
+<p class="schema-style-15 small">github.com/ccochod-source/projet-legi · projet-legi.vercel.app</p>
+</div></body></html>

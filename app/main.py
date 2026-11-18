@@ -108,6 +108,12 @@ async def accueil() -> FileResponse:
     return FileResponse(RACINE / "app/static/index.html")
 
 
+@app.get("/schema", response_class=FileResponse)
+async def schema() -> FileResponse:
+    """Présente le schéma MCP avec sa feuille de style locale."""
+    return FileResponse(RACINE / "app/static/schema.html")
+
+
 def cle_disponible() -> bool:
     """Ignore la valeur d'exemple de la configuration."""
     return bool(config.GROQ_API_KEY.strip()) and config.GROQ_API_KEY.strip() != "votre_cle"
