@@ -5,6 +5,7 @@ const precedent = document.getElementById("precedent");
 const suivant = document.getElementById("suivant");
 const compteur = document.getElementById("compteur");
 const pleinEcran = document.getElementById("plein-ecran");
+const progression = document.getElementById("progression");
 let position = 0;
 
 function afficher() {
@@ -15,6 +16,8 @@ function afficher() {
     slide.setAttribute("aria-hidden", String(index !== position));
   });
   compteur.textContent = `${position + 1} / ${diapositives.length}`;
+  progression.max = diapositives.length;
+  progression.value = position + 1;
   precedent.disabled = position === 0;
   suivant.disabled = position === diapositives.length - 1;
 }
